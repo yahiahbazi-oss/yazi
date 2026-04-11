@@ -5,12 +5,14 @@ import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
+const BIG_SIZES = ["3XL", "4XL", "5XL"];
 
 const emptyProduct = {
   name: "",
   description: "",
   price: "",
   compare_price: "",
+  big_size_price: "",
   category_id: "",
   gender: "unisex",
   color_variants: {},
@@ -18,7 +20,7 @@ const emptyProduct = {
   is_trending: false,
   is_coming_soon: false,
   delivery_price: null,
-  stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
+  stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0 },
 };
 
 export default function ProductsPage() {
@@ -66,6 +68,7 @@ export default function ProductsPage() {
       description: product.description || "",
       price: product.price || "",
       compare_price: product.compare_price || "",
+      big_size_price: product.big_size_price || "",
       category_id: product.category_id || "",
       gender: product.gender || "unisex",
       color_variants: product.color_variants || {},
@@ -73,7 +76,7 @@ export default function ProductsPage() {
       is_trending: product.is_trending || false,
       is_coming_soon: product.is_coming_soon || false,
       delivery_price: product.delivery_price,
-      stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0 },
+      stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0 },
     });
     setEditingId(product.id);
     setEditingColor(null);
@@ -140,7 +143,7 @@ export default function ProductsPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, price: parseFloat(form.price), compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, category_id: form.category_id || null, delivery_price: form.delivery_price !== null && form.delivery_price !== '' ? parseFloat(form.delivery_price) : null }),
+        body: JSON.stringify({ ...form, price: parseFloat(form.price), compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, big_size_price: form.big_size_price !== '' && form.big_size_price !== null ? parseFloat(form.big_size_price) : null, category_id: form.category_id || null, delivery_price: form.delivery_price !== null && form.delivery_price !== '' ? parseFloat(form.delivery_price) : null }),
       });
       if (!res.ok) throw new Error();
       toast.success(editingId ? "Product updated" : "Product created");
@@ -292,16 +295,21 @@ export default function ProductsPage() {
                 <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Description</label>
                 <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} resize-none`} rows={3} placeholder="Product description" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Price (TND) *</label>
                   <input type="number" step="0.01" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="0.00" required />
                 </div>
                 <div>
-                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix barre (TND)</label>
+                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix barré (TND)</label>
                   <input type="number" step="0.01" value={form.compare_price} onChange={(e) => setForm((p) => ({ ...p, compare_price: e.target.value }))} className={inputClass} placeholder="Ex: 120.00" />
                   <p className="text-neutral-400 text-[10px] mt-1">Laissez vide si pas de remise</p>
                 </div>
+              </div>
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix Grandes Tailles 3XL-5XL (TND)</label>
+                <input type="number" step="0.01" value={form.big_size_price} onChange={(e) => setForm((p) => ({ ...p, big_size_price: e.target.value }))} className={inputClass} placeholder="Laissez vide si même prix" />
+                <p className="text-neutral-400 text-[10px] mt-1">Si renseigné, ce prix s&apos;applique quand le client choisit 3XL, 4XL ou 5XL</p>
               </div>
               <div>
                 <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Category</label>
@@ -396,9 +404,22 @@ export default function ProductsPage() {
 
               {/* Stock */}
               <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock per Size</label>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock S → XXL</label>
                 <div className="grid grid-cols-5 gap-2">
                   {SIZES.map((size) => (
+                    <div key={size}>
+                      <p className="text-neutral-500 text-xs text-center mb-1">{size}</p>
+                      <input type="number" min="0" value={form.stock[size] || 0}
+                        onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
+                        className={`${inputClass} text-center`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock Grandes Tailles (3XL → 5XL)</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {BIG_SIZES.map((size) => (
                     <div key={size}>
                       <p className="text-neutral-500 text-xs text-center mb-1">{size}</p>
                       <input type="number" min="0" value={form.stock[size] || 0}

@@ -10,6 +10,8 @@ import { useCart } from "@/lib/cart-context";
 import { trackViewContent, trackAddToCart } from "@/lib/pixel-events";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
+const BIG_SIZES = ["3XL", "4XL", "5XL"];
+const isBigSize = (s) => BIG_SIZES.includes(s);
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -57,6 +59,10 @@ export default function ProductDetailPage() {
     setSelectedImage(0);
   };
 
+  const displayPrice = selectedSize && isBigSize(selectedSize) && product?.big_size_price
+    ? product.big_size_price
+    : product?.price;
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       toast.error("Veuillez sélectionner une taille");
@@ -70,9 +76,12 @@ export default function ProductDetailPage() {
 
     const colorInfo = selectedColor && product.color_variants?.[selectedColor];
     const cartImage = images[0] || product.images?.[0] || null;
+    const effectivePrice = isBigSize(selectedSize) && product.big_size_price
+      ? product.big_size_price
+      : product.price;
 
     addItem(
-      { ...product, images: [cartImage] },
+      { ...product, price: effectivePrice, images: [cartImage] },
       selectedSize,
       quantity,
       selectedColor,
@@ -186,12 +195,19 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="flex items-center gap-3 mb-2">
             <p className="text-neutral-900 text-2xl font-serif">
-              {product.price} TND
+              {displayPrice ?? product.price} TND
             </p>
-            {product.compare_price && product.compare_price > product.price && (
-              <p className="text-neutral-400 text-lg font-serif line-through">
-                {product.compare_price} TND
-              </p>
+            {!selectedSize || !isBigSize(selectedSize) ? (
+              product.compare_price && product.compare_price > product.price && (
+                <p className="text-neutral-400 text-lg font-serif line-through">
+                  {product.compare_price} TND
+                </p>
+              )
+            ) : null}
+            {product.big_size_price && (
+              <span className="text-neutral-400 text-xs">
+                {selectedSize && isBigSize(selectedSize) ? "prix grande taille" : `3XL+ : ${product.big_size_price} TND`}
+              </span>
             )}
           </div>
 
@@ -256,6 +272,37 @@ export default function ProductDetailPage() {
                 );
               })}
             </div>
+            {product.big_size_price && (
+              <div className="mt-3">
+                <p className="text-neutral-400 text-[10px] tracking-widest uppercase mb-2">Grandes Tailles — {product.big_size_price} TND</p>
+                <div className="flex flex-wrap gap-2">
+                  {BIG_SIZES.map((size) => {
+                    const qty = product.stock?.[size] ?? 0;
+                    const inStock = qty > 0;
+                    return (
+                      <div key={size} className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => inStock && setSelectedSize(size)}
+                          disabled={!inStock}
+                          className={`w-12 h-12 border text-sm transition-all rounded-sm ${
+                          selectedSize === size
+                            ? "border-neutral-900 bg-neutral-900 text-white"
+                            : inStock
+                            ? "border-neutral-200 text-neutral-700 hover:border-neutral-400"
+                            : "border-neutral-100 text-neutral-300 cursor-not-allowed line-through"
+                        }`}
+                        >
+                          {size}
+                        </button>
+                        {inStock && qty <= 5 && (
+                          <span className="text-[9px] text-amber-500 font-medium">{qty} left</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Stock urgency for selected size */}

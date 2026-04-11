@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart-context";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartDrawer() {
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice, totalDelivery, grandTotal } = useCart();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice } = useCart();
 
   return (
     <AnimatePresence>
@@ -54,7 +54,7 @@ export default function CartDrawer() {
                         <h3 className="text-neutral-900 text-sm truncate">{item.name}</h3>
                         <p className="text-neutral-500 text-xs mt-0.5">
                           Taille: {item.size}
-                          {item.color && <> Â· <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{backgroundColor: item.color}}></span>{item.colorName}</span></>}
+                          {item.color && <> &middot; <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{backgroundColor: item.color}}></span>{item.colorName}</span></>}
                         </p>
                         <p className="text-neutral-900 text-sm mt-1 font-medium">{item.price} TND</p>
                         <div className="flex items-center gap-3 mt-2">
@@ -76,19 +76,9 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="px-6 py-5 border-t border-neutral-100 space-y-4">
-                <div className="flex justify-between text-neutral-600 text-sm">
-                  <span>Sous-total</span>
-                  <span>{totalPrice} TND</span>
-                </div>
-                {totalDelivery > 0 && (
-                  <div className="flex justify-between text-neutral-600 text-sm">
-                    <span>Livraison</span>
-                    <span>{totalDelivery} TND</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-neutral-900">
                   <span className="text-sm tracking-widest uppercase">Total</span>
-                  <span className="font-serif text-lg">{grandTotal} TND</span>
+                  <span className="font-serif text-lg">{totalPrice.toFixed(2)} TND</span>
                 </div>
                 <Link
                   href="/checkout"

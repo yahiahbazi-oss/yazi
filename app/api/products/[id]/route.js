@@ -24,6 +24,7 @@ export async function PATCH(request, { params }) {
       "is_trending",
       "is_coming_soon",
       "compare_price",
+      "big_size_price",
     ];
     const updates = {};
     for (const key of allowedFields) {
