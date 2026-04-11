@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Minus, Plus, ShoppingBag, Truck } from "lucide-react";
+import { Minus, Plus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/lib/cart-context";
@@ -195,13 +195,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Delivery info */}
-          <div className="flex items-center gap-2 mb-6">
-            <Truck className="w-4 h-4 text-neutral-400" />
-            <span className={`text-sm ${product.delivery_price ? 'text-neutral-500' : 'text-green-600 font-medium'}`}>
-              {product.delivery_price ? `Livraison: ${product.delivery_price} TND` : 'Livraison gratuite'}
-            </span>
-          </div>
+
 
           {product.description && (
             <p className="text-neutral-500 text-sm leading-relaxed mb-8">

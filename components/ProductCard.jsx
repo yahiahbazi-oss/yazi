@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 export default function ProductCard({ product, index = 0 }) {
   const [hoveredColor, setHoveredColor] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [isCardHovered, setIsCardHovered] = useState(false);
 
   const cv = product.color_variants && typeof product.color_variants === "object" ? product.color_variants : null;
@@ -19,12 +20,17 @@ export default function ProductCard({ product, index = 0 }) {
   };
 
   // Image display logic:
-  // 1. Color circle hovered → first image of that color
-  // 2. Card hovered (no color hover) → second image of default color
-  // 3. Default → first image of default color
+  // 1. Hovering a color circle → first image of that color (overrides selection)
+  // 2. A color is selected (clicked) → first image of selected color
+  // 3. Card hovered, no selection → second image of default color
+  // 4. Default → first image of default color
+  const activeColor = hoveredColor || selectedColor || defaultColor;
   let displayImage;
   if (hoveredColor) {
     const imgs = getColorImages(hoveredColor);
+    displayImage = imgs[0] || null;
+  } else if (selectedColor) {
+    const imgs = getColorImages(selectedColor);
     displayImage = imgs[0] || null;
   } else if (isCardHovered) {
     const imgs = getColorImages(defaultColor);
@@ -129,11 +135,11 @@ export default function ProductCard({ product, index = 0 }) {
               onMouseLeave={() => setHoveredColor(null)}
               onClick={(e) => {
                 e.preventDefault();
-                setHoveredColor((prev) => (prev === hex ? null : hex));
+                setSelectedColor((prev) => (prev === hex ? null : hex));
               }}
               title={hex}
               className={`w-5 h-5 rounded-full border-2 transition-all duration-200 hover:scale-125 ${
-                hoveredColor === hex
+                (hoveredColor === hex || (!hoveredColor && selectedColor === hex))
                   ? "border-neutral-900 scale-125 shadow-md"
                   : "border-neutral-200 hover:border-neutral-400"
               }`}
