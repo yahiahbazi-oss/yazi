@@ -39,6 +39,10 @@ export default function HomePage() {
     () => products.some((p) => p.compare_price && p.compare_price > p.price),
     [products]
   );
+  const hasGrandTailles = useMemo(
+    () => products.some((p) => p.big_size_price && (["3XL", "4XL", "5XL"].some((s) => (p.stock?.[s] ?? 0) > 0))),
+    [products]
+  );
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -47,6 +51,8 @@ export default function HomePage() {
       if (activeCategory === "nouveaute") return p.is_new;
       if (activeCategory === "soldes")
         return p.compare_price && p.compare_price > p.price;
+      if (activeCategory === "grandes-tailles")
+        return p.big_size_price && ["3XL", "4XL", "5XL"].some((s) => (p.stock?.[s] ?? 0) > 0);
       if (activeCategory && p.category !== activeCategory) return false;
       return true;
     });
@@ -65,6 +71,9 @@ export default function HomePage() {
       : []),
     ...(hasSales
       ? [{ key: "soldes", label: "Soldes 🔥", special: "sales" }]
+      : []),
+    ...(hasGrandTailles
+      ? [{ key: "grandes-tailles", label: "Grandes Tailles", special: "big" }]
       : []),
     ...categories.map((c) => ({ key: c, label: c, special: null })),
   ];
@@ -167,11 +176,15 @@ export default function HomePage() {
                 activeCategory === btn.key
                   ? btn.special === "sales"
                     ? "bg-red-500 text-white shadow-md"
+                    : btn.special === "big"
+                    ? "bg-neutral-800 text-white shadow-md"
                     : "bg-neutral-900 text-white"
                   : btn.special === "sales"
                   ? "border border-red-400 text-red-500 hover:bg-red-50"
                   : btn.special === "new"
                   ? "border border-neutral-600 text-neutral-700 hover:bg-neutral-100"
+                  : btn.special === "big"
+                  ? "border border-neutral-700 text-neutral-800 hover:bg-neutral-100"
                   : "border border-neutral-200 text-neutral-500 hover:border-neutral-500 hover:text-neutral-800"
               }`}
             >
@@ -193,7 +206,12 @@ export default function HomePage() {
         ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                index={i}
+                overridePrice={activeCategory === "grandes-tailles" && product.big_size_price ? product.big_size_price : null}
+              />
             ))}
           </div>
         ) : (

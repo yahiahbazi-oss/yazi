@@ -204,11 +204,6 @@ export default function ProductDetailPage() {
                 </p>
               )
             ) : null}
-            {product.big_size_price && (
-              <span className="text-neutral-400 text-xs">
-                {selectedSize && isBigSize(selectedSize) ? "prix grande taille" : `3XL+ : ${product.big_size_price} TND`}
-              </span>
-            )}
           </div>
 
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-export default function ProductCard({ product, index = 0 }) {
+export default function ProductCard({ product, index = 0, overridePrice = null }) {
   const [hoveredColor, setHoveredColor] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [isCardHovered, setIsCardHovered] = useState(false);
@@ -117,8 +117,8 @@ export default function ProductCard({ product, index = 0 }) {
             {product.name}
           </h3>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-neutral-900 text-sm font-medium">{product.price} TND</p>
-            {product.compare_price && product.compare_price > product.price && (
+            <p className="text-neutral-900 text-sm font-medium">{overridePrice ?? product.price} TND</p>
+            {!overridePrice && product.compare_price && product.compare_price > product.price && (
               <p className="text-neutral-400 text-sm line-through">{product.compare_price} TND</p>
             )}
           </div>
