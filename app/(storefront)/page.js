@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { supabase } from "@/lib/supabase";
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeGender, setActiveGender] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -17,13 +19,55 @@ export default function HomePage() {
         .from("products")
         .select("*")
         .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(6);
+        .order("created_at", { ascending: false });
       setProducts(data || []);
       setLoading(false);
     }
     fetchProducts();
   }, []);
+
+  const categories = useMemo(() => {
+    const cats = new Set();
+    products.forEach((p) => {
+      if (p.category) cats.add(p.category);
+    });
+    return Array.from(cats);
+  }, [products]);
+
+  const hasNew = useMemo(() => products.some((p) => p.is_new), [products]);
+  const hasSales = useMemo(
+    () => products.some((p) => p.compare_price && p.compare_price > p.price),
+    [products]
+  );
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (activeGender && p.gender !== activeGender && p.gender !== "Unisexe")
+        return false;
+      if (activeCategory === "nouveaute") return p.is_new;
+      if (activeCategory === "soldes")
+        return p.compare_price && p.compare_price > p.price;
+      if (activeCategory && p.category !== activeCategory) return false;
+      return true;
+    });
+  }, [products, activeGender, activeCategory]);
+
+  const genderBtns = [
+    { key: null, label: "Tous" },
+    { key: "Homme", label: "Homme" },
+    { key: "Femme", label: "Femme" },
+  ];
+
+  const categoryBtns = [
+    { key: null, label: "Tout", special: null },
+    ...(hasNew
+      ? [{ key: "nouveaute", label: "Nouveaut\u00e9 \u2728", special: "new" }]
+      : []),
+    ...(hasSales
+      ? [{ key: "soldes", label: "Soldes \uD83D\uDD25", special: "sales" }]
+      : []),
+    ...categories.map((c) => ({ key: c, label: c, special: null })),
+  ];
 
   return (
     <div className="bg-white">
@@ -38,7 +82,6 @@ export default function HomePage() {
           src="https://res.cloudinary.com/dxoje33mm/video/upload/v1759755548/wc_s1ovwb.webm"
         />
         <div className="absolute inset-0 bg-black/50" />
-
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <motion.p
             initial={{ opacity: 0, y: 30 }}
@@ -48,7 +91,6 @@ export default function HomePage() {
           >
             Collection Premium
           </motion.p>
-
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -57,17 +99,15 @@ export default function HomePage() {
           >
             YAZI
           </motion.h1>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-white/70 text-sm sm:text-base max-w-lg mx-auto mb-10 leading-relaxed"
           >
-            Élégance intemporelle conçue pour l&apos;individu moderne.
-            Découvrez des vêtements qui parlent sans mots.
+            \u00c9l\u00e9gance intemporelle con\u00e7ue pour l&apos;individu moderne.
+            D\u00e9couvrez des v\u00eatements qui parlent sans mots.
           </motion.p>
-
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -84,21 +124,65 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Products Section */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10"
         >
-          <p className="text-neutral-400 text-xs tracking-[0.4em] uppercase mb-3">Nouveautés</p>
-          <h2 className="font-serif text-3xl sm:text-4xl tracking-wide text-neutral-900">La Collection</h2>
+          <p className="text-neutral-400 text-xs tracking-[0.4em] uppercase mb-3">
+            D\u00e9couvrez
+          </p>
+          <h2 className="font-serif text-3xl sm:text-4xl tracking-wide text-neutral-900">
+            La Collection
+          </h2>
         </motion.div>
 
+        {/* Gender filter */}
+        <div className="flex justify-center gap-2 mb-5 flex-wrap">
+          {genderBtns.map((btn) => (
+            <button
+              key={String(btn.key)}
+              onClick={() => setActiveGender(btn.key)}
+              className={`px-7 py-2.5 text-xs tracking-widest uppercase font-medium transition-all rounded-sm ${
+                activeGender === btn.key
+                  ? "bg-neutral-900 text-white"
+                  : "border border-neutral-300 text-neutral-600 hover:border-neutral-900 hover:text-neutral-900"
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Category filter pills */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12">
+          {categoryBtns.map((btn) => (
+            <button
+              key={String(btn.key)}
+              onClick={() => setActiveCategory(btn.key)}
+              className={`px-4 py-1.5 text-xs tracking-widest uppercase font-medium transition-all rounded-full ${
+                activeCategory === btn.key
+                  ? btn.special === "sales"
+                    ? "bg-red-500 text-white shadow-md"
+                    : "bg-neutral-900 text-white"
+                  : btn.special === "sales"
+                  ? "border border-red-400 text-red-500 hover:bg-red-50"
+                  : btn.special === "new"
+                  ? "border border-neutral-600 text-neutral-700 hover:bg-neutral-100"
+                  : "border border-neutral-200 text-neutral-500 hover:border-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/4] bg-neutral-100 rounded-sm" />
                 <div className="mt-4 h-4 bg-neutral-100 rounded w-3/4" />
@@ -106,51 +190,17 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
-            {products.map((product, i) => (
+        ) : filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filteredProducts.map((product, i) => (
               <ProductCard key={product.id} product={product} index={i} />
             ))}
           </div>
         ) : (
           <div className="text-center py-20 text-neutral-400">
-            <p className="text-lg">Pas encore de produits</p>
-            <p className="text-sm mt-2">Les produits apparaîtront ici une fois ajoutés depuis le tableau de bord</p>
+            <p className="text-lg">Aucun produit dans cette cat\u00e9gorie</p>
           </div>
         )}
-
-        {products.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-14"
-          >
-            <Link href="/products" className="inline-flex items-center gap-2 text-neutral-900 hover:text-neutral-500 text-sm tracking-widest uppercase transition-colors">
-              Voir Tous les Produits
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        )}
-      </section>
-
-      {/* Brand Story */}
-      <section className="py-20 sm:py-28 border-t border-neutral-100">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <p className="text-neutral-400 text-xs tracking-[0.4em] uppercase mb-3">Notre Philosophie</p>
-            <h2 className="font-serif text-3xl sm:text-4xl tracking-wide text-neutral-900 mb-8">Conçu avec Intention</h2>
-            <p className="text-neutral-500 leading-relaxed text-sm sm:text-base">
-              Chez YAZI, nous croyons que le luxe ne réside pas dans l&apos;excès — mais dans l&apos;intention.
-              Chaque pièce de notre collection est conçue avec une attention méticuleuse aux détails,
-              utilisant des matériaux premium qui résistent à l&apos;épreuve du temps.
-            </p>
-          </motion.div>
-        </div>
       </section>
     </div>
   );

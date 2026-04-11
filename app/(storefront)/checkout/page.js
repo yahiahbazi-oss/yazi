@@ -33,6 +33,16 @@ export default function CheckoutPage() {
     if (!form.name.trim()) return toast.error("Veuillez entrer votre nom");
     if (!form.phone.trim())
       return toast.error("Veuillez entrer votre num\u00e9ro de t\u00e9l\u00e9phone");
+    const rawDigits = form.phone.trim().replace(/\D/g, "");
+    const phoneDigits = rawDigits.startsWith("216") && rawDigits.length === 11 ? rawDigits.slice(3) : rawDigits;
+    if (phoneDigits.length !== 8)
+      return toast.error("Num\u00e9ro invalide : doit contenir 8 chiffres (ex: 93733766)");
+    if (form.phone2.trim()) {
+      const raw2 = form.phone2.trim().replace(/\D/g, "");
+      const phone2Digits = raw2.startsWith("216") && raw2.length === 11 ? raw2.slice(3) : raw2;
+      if (phone2Digits.length !== 8)
+        return toast.error("2\u00e8me num\u00e9ro invalide : doit contenir 8 chiffres");
+    }
     if (!form.governorate)
       return toast.error("Veuillez s\u00e9lectionner votre gouvernorat");
     if (!form.address.trim())
