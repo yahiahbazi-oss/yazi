@@ -61,10 +61,10 @@ export default function HomePage() {
   const categoryBtns = [
     { key: null, label: "Tout", special: null },
     ...(hasNew
-      ? [{ key: "nouveaute", label: "Nouveaut\u00e9 \u2728", special: "new" }]
+      ? [{ key: "nouveaute", label: "Nouveauté ✨", special: "new" }]
       : []),
     ...(hasSales
-      ? [{ key: "soldes", label: "Soldes \uD83D\uDD25", special: "sales" }]
+      ? [{ key: "soldes", label: "Soldes 🔥", special: "sales" }]
       : []),
     ...categories.map((c) => ({ key: c, label: c, special: null })),
   ];
@@ -105,8 +105,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-white/70 text-sm sm:text-base max-w-lg mx-auto mb-10 leading-relaxed"
           >
-            \u00c9l\u00e9gance intemporelle con\u00e7ue pour l&apos;individu moderne.
-            D\u00e9couvrez des v\u00eatements qui parlent sans mots.
+            Élégance intemporelle conçue pour l&apos;individu moderne.
+            Découvrez des vêtements qui parlent sans mots.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -133,7 +133,7 @@ export default function HomePage() {
           className="text-center mb-10"
         >
           <p className="text-neutral-400 text-xs tracking-[0.4em] uppercase mb-3">
-            D\u00e9couvrez
+            Découvrez
           </p>
           <h2 className="font-serif text-3xl sm:text-4xl tracking-wide text-neutral-900">
             La Collection
@@ -198,7 +198,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-20 text-neutral-400">
-            <p className="text-lg">Aucun produit dans cette cat\u00e9gorie</p>
+            <p className="text-lg">Aucun produit dans cette catégorie</p>
           </div>
         )}
       </section>

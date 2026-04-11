@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <h3 className="text-neutral-900 font-serif text-2xl tracking-[0.3em] uppercase mb-4">YAZI</h3>
             <p className="text-neutral-500 text-sm leading-relaxed">
-              V\u00eatements minimalistes confectionn\u00e9s avec pr\u00e9cision. \u00c9l\u00e9gance intemporelle pour l&apos;individu moderne.
+              Vêtements minimalistes confectionnés avec précision. Élégance intemporelle pour l&apos;individu moderne.
             </p>
           </div>
           <div>
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-6 border-t border-neutral-200 text-center">
-          <p className="text-neutral-400 text-xs tracking-widest">&copy; {new Date().getFullYear()} YAZI. Tous droits r\u00e9serv\u00e9s.</p>
+          <p className="text-neutral-400 text-xs tracking-widest">&copy; {new Date().getFullYear()} YAZI. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
