@@ -400,7 +400,9 @@ export default function ProductDetailPage() {
               "Bonjour, je voudrais commander :\n*" + product.name + "*" +
               (selectedSize ? "\nTaille : " + selectedSize : "") +
               (selectedColor && product.color_variants?.[selectedColor] ? "\nCouleur : " + product.color_variants[selectedColor].name : "") +
-              "\nQuantité : " + quantity + "\nPrix : " + (displayPrice ?? product.price) + " TND"
+              "\nQuantité : " + quantity +
+              "\nPrix unitaire : " + (displayPrice ?? product.price) + " TND" +
+              "\nTotal : " + ((displayPrice ?? product.price) * quantity) + " TND"
             )}
             target="_blank"
             rel="noopener noreferrer"
