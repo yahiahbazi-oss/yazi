@@ -26,6 +26,7 @@ export async function PATCH(request, { params }) {
       "compare_price",
       "big_size_price",
       "collection_slugs",
+      "recommended_product_ids",
     ];
     const updates = {};
     for (const key of allowedFields) {

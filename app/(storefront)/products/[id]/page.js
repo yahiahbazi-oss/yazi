@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/lib/cart-context";
 import { trackViewContent, trackAddToCart } from "@/lib/pixel-events";
+import ProductCard from "@/components/ProductCard";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const BIG_SIZES = ["3XL", "4XL", "5XL"];
@@ -23,6 +24,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -38,6 +40,14 @@ export default function ProductDetailPage() {
         const cv = data.color_variants;
         if (cv && Object.keys(cv).length > 0) {
           setSelectedColor(Object.keys(cv)[0]);
+        }
+        if (data.recommended_product_ids?.length > 0) {
+          const { data: recoData } = await supabase
+            .from("products")
+            .select("*")
+            .in("id", data.recommended_product_ids)
+            .eq("is_active", true);
+          setRecommendations(recoData || []);
         }
       }
     }
@@ -207,12 +217,15 @@ export default function ProductDetailPage() {
             ) : null}
           </div>
 
-
+          <p className={`text-xs mb-5 font-medium ${product.delivery_price ? "text-neutral-500" : "text-green-600"}`}>
+            {product.delivery_price ? `🚚 Livraison : ${product.delivery_price} TND` : "✅ Livraison gratuite"}
+          </p>
 
           {product.description && (
-            <p className="text-neutral-500 text-sm leading-relaxed mb-8">
-              {product.description}
-            </p>
+            <div className="mb-8 pb-6 border-b border-neutral-100">
+              <p className="text-neutral-400 text-[10px] tracking-widest uppercase mb-2">Description</p>
+              <p className="text-neutral-600 text-sm leading-relaxed whitespace-pre-line">{product.description}</p>
+            </div>
           )}
 
           {/* Color Selector */}
@@ -380,8 +393,53 @@ export default function ProductDetailPage() {
               Ajouter au Panier
             </button>
           )}
+
+          {/* WhatsApp Order */}
+          <a
+            href={"https://wa.me/21693733766?text=" + encodeURIComponent(
+              "Bonjour, je voudrais commander :\n*" + product.name + "*" +
+              (selectedSize ? "\nTaille : " + selectedSize : "") +
+              (selectedColor && product.color_variants?.[selectedColor] ? "\nCouleur : " + product.color_variants[selectedColor].name : "") +
+              "\nQuantité : " + quantity + "\nPrix : " + (displayPrice ?? product.price) + " TND"
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full mt-3 border border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white py-3.5 text-sm tracking-widest uppercase font-medium transition-all flex items-center justify-center gap-2 rounded-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 fill-current">
+              <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.34.63 4.63 1.827 6.64L2.667 29.333l6.907-1.8A13.267 13.267 0 0016.003 29.333c7.36 0 13.33-5.973 13.33-13.333S23.363 2.667 16.003 2.667zm0 24a10.6 10.6 0 01-5.413-1.48l-.387-.233-4.093 1.067 1.093-3.973-.253-.413A10.6 10.6 0 015.337 16c0-5.88 4.787-10.667 10.666-10.667S26.67 10.12 26.67 16 21.882 26.667 16.003 26.667zm5.84-7.987c-.32-.16-1.893-.933-2.187-1.04-.293-.107-.507-.16-.72.16-.213.32-.827 1.04-.947 1.253-.12.213-.24.24-.56.08-.32-.16-1.347-.493-2.56-1.573-.947-.84-1.587-1.88-1.773-2.2-.187-.32-.02-.493.14-.653.147-.147.32-.387.48-.573.16-.187.213-.32.32-.533.107-.213.053-.4-.027-.56-.08-.16-.72-1.733-.987-2.373-.253-.613-.52-.533-.72-.547-.187-.013-.4-.013-.613-.013-.213 0-.56.08-.853.373-.293.293-1.12 1.093-1.12 2.667 0 1.573 1.147 3.093 1.307 3.307.16.213 2.24 3.413 5.44 4.787.76.333 1.347.533 1.813.68.76.24 1.453.207 2 .127.613-.093 1.893-.773 2.16-1.52.267-.747.267-1.387.187-1.52-.08-.133-.293-.213-.613-.373z" />
+            </svg>
+            Commander via WhatsApp
+          </a>
+
+          {/* Trust Badges */}
+          <div className="mt-6 pt-6 border-t border-neutral-100 grid grid-cols-3 gap-3">
+            {[
+              { icon: "💳", text: "Paiement à la livraison" },
+              { icon: "🚚", text: "Livraison rapide" },
+              { icon: "🔄", text: "Échange sous 7j" },
+            ].map((b) => (
+              <div key={b.text} className="flex flex-col items-center gap-1 text-center">
+                <span className="text-xl">{b.icon}</span>
+                <p className="text-[10px] text-neutral-500 leading-tight">{b.text}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
+
+      {/* Recommended Products */}
+      {recommendations.length > 0 && (
+        <div className="mt-16 pt-12 border-t border-neutral-100">
+          <p className="text-neutral-400 text-xs tracking-[0.4em] uppercase mb-3 text-center">Vous aimerez aussi</p>
+          <h2 className="font-serif text-2xl tracking-wide text-neutral-900 mb-8 text-center">Produits similaires</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {recommendations.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

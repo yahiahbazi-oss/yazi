@@ -22,6 +22,7 @@ const emptyProduct = {
   is_coming_soon: false,
   delivery_price: null,
   collection_slugs: [],
+  recommended_product_ids: [],
   stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
 };
 
@@ -39,6 +40,7 @@ export default function ProductsPage() {
   const [colorCode, setColorCode] = useState("#000000");
   const [colorImageUrl, setColorImageUrl] = useState("");
   const [editingColor, setEditingColor] = useState(null);
+  const [recoSearch, setRecoSearch] = useState("");
 
   const fetchProducts = useCallback(async () => {
     const res = await fetch("/api/products");
@@ -87,6 +89,7 @@ export default function ProductsPage() {
       is_coming_soon: product.is_coming_soon || false,
       delivery_price: product.delivery_price,
       collection_slugs: product.collection_slugs || [],
+      recommended_product_ids: product.recommended_product_ids || [],
       stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
     });
     setEditingId(product.id);
@@ -476,6 +479,49 @@ export default function ProductsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Recommended Products Picker */}
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Produits Recommandés</label>
+                <p className="text-neutral-400 text-[11px] mb-3">Ces produits s&apos;afficheront sous ce produit comme suggestions d&apos;achat</p>
+                <input
+                  type="text"
+                  value={recoSearch}
+                  onChange={(e) => setRecoSearch(e.target.value)}
+                  className={inputClass + " mb-2"}
+                  placeholder="Rechercher un produit..."
+                />
+                <div className="border border-neutral-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-neutral-100">
+                  {products
+                    .filter((p) => p.id !== editingId && p.name.toLowerCase().includes(recoSearch.toLowerCase()))
+                    .map((p) => {
+                      const checked = (form.recommended_product_ids || []).includes(p.id);
+                      return (
+                        <label key={p.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const ids = form.recommended_product_ids || [];
+                              setForm((prev) => ({
+                                ...prev,
+                                recommended_product_ids: e.target.checked
+                                  ? [...ids, p.id]
+                                  : ids.filter((rid) => rid !== p.id),
+                              }));
+                            }}
+                            className="w-4 h-4 accent-neutral-900 flex-shrink-0"
+                          />
+                          {getFirstImage(p) && (
+                            <img src={getFirstImage(p)} alt="" className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                          )}
+                          <span className="text-sm text-neutral-700 flex-1 truncate">{p.name}</span>
+                          <span className="text-xs text-neutral-400 flex-shrink-0">{p.price} TND</span>
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.is_new} onChange={(e) => setForm((p) => ({ ...p, is_new: e.target.checked }))} className="w-4 h-4 rounded border-neutral-300 accent-neutral-900" />

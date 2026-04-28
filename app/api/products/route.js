@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, description, price, images, category, category_id, gender, color_variants, stock, is_new, delivery_price, is_trending, is_coming_soon, compare_price, big_size_price, collection_slugs } = body;
+    const { name, description, price, images, category, category_id, gender, color_variants, stock, is_new, delivery_price, is_trending, is_coming_soon, compare_price, big_size_price, collection_slugs, recommended_product_ids } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Product name is required" }, { status: 400 });
@@ -56,6 +56,7 @@ export async function POST(request) {
         compare_price: compare_price !== undefined && compare_price !== null && compare_price !== '' ? compare_price : null,
         big_size_price: big_size_price !== undefined && big_size_price !== null && big_size_price !== '' ? big_size_price : null,
         collection_slugs: Array.isArray(collection_slugs) ? collection_slugs : [],
+        recommended_product_ids: Array.isArray(recommended_product_ids) ? recommended_product_ids : [],
         is_active: true,
       })
       .select()
