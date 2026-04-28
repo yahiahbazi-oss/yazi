@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
@@ -130,19 +130,47 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <Link
-              href="/products"
+            <button
+              onClick={() => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" })}
               className="inline-flex items-center gap-2 bg-white hover:bg-white/90 text-neutral-900 px-8 py-3.5 text-sm tracking-widest uppercase font-medium transition-colors rounded-sm"
             >
               Acheter Maintenant
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
           </motion.div>
+        </div>
+        {/* Scroll indicator */}
+        <motion.button
+          aria-label="Défiler vers les produits"
+          onClick={() => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" })}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white/60 hover:text-white transition-colors"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronDown className="w-8 h-8" />
+        </motion.button>
+      </section>
+
+      {/* Trust Badges */}
+      <section className="bg-white border-b border-neutral-100 py-5 sm:py-6">
+        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { icon: "🚚", title: "Livraison rapide", desc: "Partout en Tunisie" },
+            { icon: "💳", title: "Paiement à la livraison", desc: "Aucun risque" },
+            { icon: "🔄", title: "Échange facile", desc: "Sous 7 jours" },
+            { icon: "✅", title: "100% Authentique", desc: "Qualité garantie" },
+          ].map((item) => (
+            <div key={item.title} className="flex flex-col items-center text-center gap-1 py-2">
+              <span className="text-2xl">{item.icon}</span>
+              <p className="text-neutral-900 text-[11px] sm:text-xs font-semibold tracking-wide mt-1">{item.title}</p>
+              <p className="text-neutral-400 text-[10px] sm:text-[11px]">{item.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Products Section */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section id="products-section" className="py-20 sm:py-28 px-4 sm:px-6 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -270,6 +298,41 @@ export default function HomePage() {
             <p className="text-lg">Aucun produit dans cette catégorie</p>
           </div>
         )}
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-neutral-900 py-16 sm:py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-white/40 text-xs tracking-[0.4em] uppercase mb-3">Avis clients</p>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white tracking-wide">
+              Ce qu&apos;ils disent de nous
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { name: "Amira B.", rating: 5, text: "Qualité exceptionnelle, les vêtements sont exactement comme sur les photos. Livraison en 2 jours !" },
+              { name: "Mohamed K.", rating: 5, text: "Le paiement à la livraison m'a vraiment rassuré. Produit impeccable, coupe parfaite. Je recommande vivement." },
+              { name: "Yasmine T.", rating: 5, text: "J'ai commandé 3 fois et je suis toujours ravie. Tissu premium, service au top. YAZI c'est ma marque !" },
+            ].map((r) => (
+              <motion.div
+                key={r.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white/5 border border-white/10 rounded-xl p-6"
+              >
+                <div className="flex gap-0.5 mb-4">
+                  {[...Array(r.rating)].map((_, i) => (
+                    <span key={i} className="text-amber-400 text-sm">★</span>
+                  ))}
+                </div>
+                <p className="text-white/80 text-sm leading-relaxed mb-5">&quot;{r.text}&quot;</p>
+                <p className="text-white/40 text-xs tracking-widest uppercase">{r.name}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
