@@ -11,6 +11,7 @@ import { trackViewContent, trackAddToCart } from "@/lib/pixel-events";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const BIG_SIZES = ["3XL", "4XL", "5XL"];
+const EU_SIZES = ["36", "38", "40", "42", "44", "46", "48"];
 const isBigSize = (s) => BIG_SIZES.includes(s);
 
 export default function ProductDetailPage() {
@@ -272,6 +273,37 @@ export default function ProductDetailPage() {
                 <p className="text-neutral-400 text-[10px] tracking-widest uppercase mb-2">Grandes Tailles — {product.big_size_price} TND</p>
                 <div className="flex flex-wrap gap-2">
                   {BIG_SIZES.map((size) => {
+                    const qty = product.stock?.[size] ?? 0;
+                    const inStock = qty > 0;
+                    return (
+                      <div key={size} className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => inStock && setSelectedSize(size)}
+                          disabled={!inStock}
+                          className={`w-12 h-12 border text-sm transition-all rounded-sm ${
+                          selectedSize === size
+                            ? "border-neutral-900 bg-neutral-900 text-white"
+                            : inStock
+                            ? "border-neutral-200 text-neutral-700 hover:border-neutral-400"
+                            : "border-neutral-100 text-neutral-300 cursor-not-allowed line-through"
+                        }`}
+                        >
+                          {size}
+                        </button>
+                        {inStock && qty <= 5 && (
+                          <span className="text-[9px] text-amber-500 font-medium">{qty} left</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {EU_SIZES.some((s) => (product.stock?.[s] ?? 0) > 0) && (
+              <div className="mt-4">
+                <p className="text-neutral-400 text-[10px] tracking-widest uppercase mb-2">Tailles Européennes (EU)</p>
+                <div className="flex flex-wrap gap-2">
+                  {EU_SIZES.map((size) => {
                     const qty = product.stock?.[size] ?? 0;
                     const inStock = qty > 0;
                     return (

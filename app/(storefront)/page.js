@@ -9,21 +9,28 @@ import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [heroVideoUrl, setHeroVideoUrl] = useState("https://res.cloudinary.com/dxoje33mm/video/upload/v1759755548/wc_s1ovwb.webm");
   const [loading, setLoading] = useState(true);
   const [activeGender, setActiveGender] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCollection, setActiveCollection] = useState(null);
 
   useEffect(() => {
-    async function fetchProducts() {
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      setProducts(data || []);
+    async function fetchAll() {
+      const [{ data: productsData }, collectionsRes, settingsRes] = await Promise.all([
+        supabase.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        fetch("/api/collections"),
+        fetch("/api/settings"),
+      ]);
+      setProducts(productsData || []);
+      const colData = await collectionsRes.json();
+      setCollections(colData.collections || []);
+      const settData = await settingsRes.json();
+      if (settData.settings?.hero_video_url) setHeroVideoUrl(settData.settings.hero_video_url);
       setLoading(false);
     }
-    fetchProducts();
+    fetchAll();
   }, []);
 
   const categories = useMemo(() => {
@@ -46,8 +53,9 @@ export default function HomePage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      if (activeGender && p.gender !== activeGender && p.gender !== "Unisexe")
+      if (activeGender && p.gender !== activeGender && p.gender !== "unisex")
         return false;
+      if (activeCollection && !(p.collection_slugs || []).includes(activeCollection)) return false;
       if (activeCategory === "nouveaute") return p.is_new;
       if (activeCategory === "soldes")
         return p.compare_price && p.compare_price > p.price;
@@ -56,12 +64,12 @@ export default function HomePage() {
       if (activeCategory && p.category !== activeCategory) return false;
       return true;
     });
-  }, [products, activeGender, activeCategory]);
+  }, [products, activeGender, activeCategory, activeCollection]);
 
   const genderBtns = [
     { key: null, label: "Tous" },
-    { key: "Homme", label: "Homme" },
-    { key: "Femme", label: "Femme" },
+    { key: "men", label: "Homme" },
+    { key: "women", label: "Femme" },
   ];
 
   const categoryBtns = [
@@ -88,7 +96,7 @@ export default function HomePage() {
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
-          src="https://res.cloudinary.com/dxoje33mm/video/upload/v1759755548/wc_s1ovwb.webm"
+          src={heroVideoUrl}
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
@@ -148,6 +156,43 @@ export default function HomePage() {
             La Collection
           </h2>
         </motion.div>
+
+        {/* Collections banner - only shown when collections exist */}
+        {collections.length > 0 && (
+          <div className="mb-12">
+            <p className="text-neutral-400 text-[10px] tracking-[0.4em] uppercase mb-5 text-center">Collections</p>
+            <div className="-mx-4 sm:mx-0">
+              <div className="flex gap-3 overflow-x-auto px-4 sm:px-0 pb-3 sm:flex-wrap sm:justify-center hide-scrollbar">
+                <button
+                  onClick={() => setActiveCollection(null)}
+                  className={`flex-shrink-0 flex flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200 px-6 py-5 min-w-[100px] border-2 ${
+                    !activeCollection
+                      ? "border-neutral-900 bg-neutral-900 text-white shadow-xl scale-105"
+                      : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400 hover:shadow-md hover:scale-105"
+                  }`}
+                >
+                  <span className="text-3xl leading-none">🛍️</span>
+                  <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Tout</span>
+                </button>
+                {collections.map((col) => (
+                  <button
+                    key={col.slug}
+                    onClick={() => setActiveCollection((prev) => (prev === col.slug ? null : col.slug))}
+                    className={`flex-shrink-0 flex flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200 px-6 py-5 min-w-[100px] border-2 ${
+                      activeCollection === col.slug
+                        ? "border-white/60 shadow-2xl scale-110"
+                        : "border-transparent shadow-md hover:shadow-xl hover:scale-105 hover:-translate-y-0.5"
+                    }`}
+                    style={{ backgroundColor: col.color, color: col.text_color }}
+                  >
+                    <span className="text-3xl leading-none">{col.emoji}</span>
+                    <span className="text-[9px] tracking-[0.2em] uppercase font-bold">{col.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Gender filter */}
         <div className="flex justify-center gap-2 mb-5 flex-wrap">
