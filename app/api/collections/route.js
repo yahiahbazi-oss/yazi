@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const { name, slug, emoji, color, text_color, sort_order } = await request.json();
+    const { name, slug, emoji, color, text_color, sort_order, image_url } = await request.json();
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
@@ -34,15 +34,19 @@ export async function POST(request) {
         color: color || "#18181b",
         text_color: text_color || "#ffffff",
         sort_order: sort_order || 0,
+        image_url: image_url?.trim() || null,
       })
       .select()
       .single();
     if (error) {
+      console.error("Collections POST error:", error);
       if (error.code === "23505") return NextResponse.json({ error: "Ce slug existe déjà" }, { status: 409 });
-      return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+      if (error.code === "42P01") return NextResponse.json({ error: "Table 'collections' introuvable. Exécutez la migration SQL d'abord." }, { status: 500 });
+      return NextResponse.json({ error: error.message || "Failed to create" }, { status: 500 });
     }
     return NextResponse.json({ collection: data });
-  } catch {
+  } catch (err) {
+    console.error("Collections POST exception:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

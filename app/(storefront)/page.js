@@ -178,15 +178,21 @@ export default function HomePage() {
                   <button
                     key={col.slug}
                     onClick={() => setActiveCollection((prev) => (prev === col.slug ? null : col.slug))}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200 px-6 py-5 min-w-[100px] border-2 ${
+                    className={`flex-shrink-0 flex flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200 px-6 py-5 min-w-[110px] border-2 relative overflow-hidden ${
                       activeCollection === col.slug
                         ? "border-white/60 shadow-2xl scale-110"
                         : "border-transparent shadow-md hover:shadow-xl hover:scale-105 hover:-translate-y-0.5"
                     }`}
                     style={{ backgroundColor: col.color, color: col.text_color }}
                   >
-                    <span className="text-3xl leading-none">{col.emoji}</span>
-                    <span className="text-[9px] tracking-[0.2em] uppercase font-bold">{col.name}</span>
+                    {col.image_url && (
+                      <img src={col.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
+                    )}
+                    {activeCollection === col.slug && (
+                      <span className="absolute inset-0 rounded-2xl ring-4 ring-white/30 pointer-events-none" />
+                    )}
+                    <span className="relative text-3xl leading-none drop-shadow">{col.emoji}</span>
+                    <span className="relative text-[9px] tracking-[0.2em] uppercase font-bold">{col.name}</span>
                   </button>
                 ))}
               </div>

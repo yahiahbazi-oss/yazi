@@ -6,7 +6,7 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json();
     const supabase = createServerClient();
-    const allowed = ["name", "slug", "emoji", "color", "text_color", "is_active", "sort_order"];
+    const allowed = ["name", "slug", "emoji", "color", "text_color", "is_active", "sort_order", "image_url"];
     const updates = {};
     for (const key of allowed) {
       if (body[key] !== undefined) updates[key] = body[key];
@@ -17,9 +17,13 @@ export async function PATCH(request, { params }) {
       .eq("id", id)
       .select()
       .single();
-    if (error) return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    if (error) {
+      console.error("Collections PATCH error:", error);
+      return NextResponse.json({ error: error.message || "Failed to update" }, { status: 500 });
+    }
     return NextResponse.json({ collection: data });
-  } catch {
+  } catch (err) {
+    console.error("Collections PATCH exception:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

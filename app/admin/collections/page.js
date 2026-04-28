@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Check, Image } from "lucide-react";
 import toast from "react-hot-toast";
 
 const PRESET_COLORS = [
@@ -25,6 +25,7 @@ const emptyForm = {
   color: "#18181b",
   text_color: "#ffffff",
   sort_order: 0,
+  image_url: "",
 };
 
 export default function CollectionsPage() {
@@ -57,6 +58,7 @@ export default function CollectionsPage() {
       color: col.color || "#18181b",
       text_color: col.text_color || "#ffffff",
       sort_order: col.sort_order || 0,
+      image_url: col.image_url || "",
     });
     setEditingId(col.id);
     setShowForm(true);
@@ -72,12 +74,10 @@ export default function CollectionsPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, image_url: form.image_url?.trim() || null }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Échec");
       toast.success(editingId ? "Collection mise à jour" : "Collection créée");
       setShowForm(false);
       fetchCollections();
@@ -104,15 +104,20 @@ export default function CollectionsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-neutral-900">Collections</h1>
-          <p className="text-neutral-500 text-sm mt-1">Créez des collections pour filtrer et mettre en avant vos produits</p>
+          <p className="text-neutral-500 text-sm mt-1">Créez des collections visuelles (Summer 2026, Black Friday…) et associez-les à vos produits</p>
         </div>
         <button onClick={openNew} className="flex items-center gap-2 bg-neutral-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nouvelle Collection</span>
         </button>
+      </div>
+
+      {/* Migration warning */}
+      <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+        <strong>⚠️ Avant tout :</strong> Exécutez <code className="bg-amber-100 px-1 rounded text-xs">migration-v6.sql</code> dans votre éditeur SQL Supabase si ce n&apos;est pas encore fait.
       </div>
 
       {loading ? (
@@ -133,13 +138,21 @@ export default function CollectionsPage() {
           {collections.map((col) => (
             <div
               key={col.id}
-              className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
+              className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5 min-h-[160px]"
               style={{ backgroundColor: col.color }}
             >
-              <div className="p-6 flex flex-col items-center text-center" style={{ color: col.text_color }}>
-                <span className="text-5xl mb-3 leading-none">{col.emoji}</span>
-                <h3 className="font-bold text-lg tracking-wide uppercase">{col.name}</h3>
+              {col.image_url && (
+                <img src={col.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              )}
+              <div className="relative p-6 flex flex-col items-center text-center" style={{ color: col.text_color }}>
+                <span className="text-5xl mb-3 leading-none drop-shadow-md">{col.emoji}</span>
+                <h3 className="font-bold text-lg tracking-wide uppercase drop-shadow">{col.name}</h3>
                 <p className="text-[10px] tracking-[0.2em] uppercase mt-1 opacity-60">/{col.slug}</p>
+                {col.image_url && (
+                  <span className="mt-2 text-[9px] opacity-60 flex items-center gap-1">
+                    <Image className="w-3 h-3" /> Image active
+                  </span>
+                )}
               </div>
               <div className="absolute top-2 right-2 flex gap-1.5">
                 <button
@@ -177,13 +190,18 @@ export default function CollectionsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-5">
-              {/* Preview card */}
+              {/* Live preview */}
               <div
-                className="rounded-xl p-6 flex flex-col items-center text-center shadow-md transition-all"
-                style={{ backgroundColor: form.color, color: form.text_color }}
+                className="rounded-xl overflow-hidden shadow-md transition-all min-h-[130px] relative"
+                style={{ backgroundColor: form.color }}
               >
-                <span className="text-5xl mb-2 leading-none">{form.emoji || "🏷️"}</span>
-                <span className="font-bold text-lg tracking-widest uppercase">{form.name || "Aperçu"}</span>
+                {form.image_url && (
+                  <img src={form.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" onError={(e) => { e.target.style.display = "none"; }} />
+                )}
+                <div className="relative p-6 flex flex-col items-center text-center" style={{ color: form.text_color }}>
+                  <span className="text-5xl mb-2 leading-none">{form.emoji || "🏷️"}</span>
+                  <span className="font-bold text-lg tracking-widest uppercase">{form.name || "Aperçu"}</span>
+                </div>
               </div>
 
               <div>
@@ -205,9 +223,27 @@ export default function CollectionsPage() {
                   value={form.emoji}
                   onChange={(e) => setForm((p) => ({ ...p, emoji: e.target.value }))}
                   className={inputClass}
-                  placeholder="🏷️ 🔥 ✨ ❄️ 🌸..."
+                  placeholder="🏷️ 🔥 ✨ ❄️ 🌸 ☀️ 👋..."
                 />
                 <p className="text-neutral-400 text-[10px] mt-1">Collez ou tapez un emoji</p>
+              </div>
+
+              {/* Image URL */}
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5 flex items-center gap-1.5">
+                  <Image className="w-3.5 h-3.5" />
+                  Image de fond (optionnel)
+                </label>
+                <input
+                  type="url"
+                  value={form.image_url}
+                  onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))}
+                  className={inputClass}
+                  placeholder="https://res.cloudinary.com/... ou autre URL"
+                />
+                <p className="text-neutral-400 text-[10px] mt-1">
+                  Collez l&apos;URL d&apos;une image. Elle apparaîtra en fond de la carte sur la page d&apos;accueil.
+                </p>
               </div>
 
               <div>
@@ -257,6 +293,9 @@ export default function CollectionsPage() {
                   className={inputClass}
                   placeholder="0 = en premier"
                 />
+                <p className="text-neutral-400 text-[10px] mt-1">
+                  Les collections avec la valeur la plus basse apparaissent en premier. Ex: 0, 1, 2, 3...
+                </p>
               </div>
 
               <button type="submit" disabled={saving} className="w-full bg-neutral-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-neutral-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS collections (
   emoji TEXT DEFAULT '🏷️',
   color TEXT DEFAULT '#18181b',
   text_color TEXT DEFAULT '#ffffff',
+  image_url TEXT DEFAULT NULL,
   is_active BOOLEAN DEFAULT TRUE,
   sort_order INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
