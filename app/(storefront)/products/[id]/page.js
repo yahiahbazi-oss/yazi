@@ -252,26 +252,10 @@ export default function ProductDetailPage() {
           </div>
 
           <p className={`text-xs mb-4 font-medium ${product.delivery_price ? "text-neutral-500" : "text-green-600"}`}>
-            {product.delivery_price ? `🚚 Livraison : ${product.delivery_price} TND` : "✅ Livraison gratuite"}
+            {product.delivery_price ? null : "✅ Livraison gratuite"}
           </p>
 
-          {/* FLASHY TOP CTA */}
-          {!product.is_coming_soon && (
-            <button
-              onClick={() => {
-                formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                setTimeout(() => formRef.current?.classList.add("ring-4", "ring-amber-400", "ring-offset-2"), 400);
-                setTimeout(() => formRef.current?.classList.remove("ring-4", "ring-amber-400", "ring-offset-2"), 1800);
-              }}
-              className="w-full mb-5 relative overflow-hidden rounded-xl py-4 text-base font-extrabold tracking-widest uppercase text-white shadow-xl transition-transform active:scale-[0.97]"
-              style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)" }}
-            >
-              <span className="absolute inset-0 bg-white/10 animate-pulse rounded-xl" />
-              <span className="relative flex items-center justify-center gap-2">
-                🛍️ Achetez maintenant
-              </span>
-            </button>
-          )}
+          {/* FLASHY TOP CTA - placeholder removed, moved under form */}
 
           {product.description && (
             <div className="mb-8 pb-6 border-b border-neutral-100">
@@ -450,6 +434,20 @@ export default function ProductDetailPage() {
               ))}
             </select>
           </div>
+
+          {/* FLASHY CTA — under form */}
+          {!product.is_coming_soon && (
+            <button
+              onClick={handleDirectOrder}
+              className="w-full mb-4 relative overflow-hidden rounded-xl py-4 text-base font-extrabold tracking-widest uppercase text-white shadow-xl transition-transform active:scale-[0.97]"
+              style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)" }}
+            >
+              <span className="absolute inset-0 bg-white/10 animate-pulse rounded-xl" />
+              <span className="relative flex items-center justify-center gap-2">
+                🛍️ Achetez maintenant
+              </span>
+            </button>
+          )}
 
           {/* Stock urgency for selected size */}
           {selectedSize && (() => {
