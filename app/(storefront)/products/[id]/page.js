@@ -26,6 +26,8 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [orderForm, setOrderForm] = useState({ name: "", phone: "", phone2: "", address: "", delegation: "", governorate: "" });
   const [recommendations, setRecommendations] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(null);
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +78,11 @@ export default function ProductDetailPage() {
     ? product.big_size_price
     : product?.price;
 
+  const isValidPhone = (p) => {
+    const d = p.replace(/[\s\-().]/g, "");
+    return /^\d{8}$/.test(d) || /^(\+216|216)\d{8}$/.test(d);
+  };
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       toast.error("Veuillez sélectionner une taille");
@@ -104,32 +111,53 @@ export default function ProductDetailPage() {
     toast.success("Ajouté au panier");
   };
 
-  const handleDirectOrder = () => {
-    if (!selectedSize) { toast.error("Veuillez sélectionner une taille"); return; }
-    if (!orderForm.name.trim()) { toast.error("Veuillez entrer votre nom"); return; }
+  const handleDirectOrder = async () => {
+    if (!selectedSize) { toast.error("Veuillez sélectionner une taille"); formRef.current?.scrollIntoView({ behavior: "smooth" }); return; }
+    if (!orderForm.name.trim()) { toast.error("Veuillez entrer votre nom"); formRef.current?.scrollIntoView({ behavior: "smooth" }); return; }
     if (!orderForm.phone.trim()) { toast.error("Veuillez entrer votre numéro de téléphone"); return; }
+    if (!isValidPhone(orderForm.phone)) { toast.error("Numéro invalide — ex: 12345678 ou +21612345678"); return; }
+    if (!orderForm.address.trim()) { toast.error("Veuillez entrer votre adresse"); return; }
     if (!orderForm.governorate) { toast.error("Veuillez choisir un gouvernorat"); return; }
+
     const effectivePrice = isBigSize(selectedSize) && product.big_size_price ? product.big_size_price : product.price;
-    const total = (effectivePrice * quantity).toFixed(2);
+    const total = parseFloat((effectivePrice * quantity).toFixed(2));
     const colorInfo = selectedColor && product.color_variants?.[selectedColor];
-    const msg = [
-      "Bonjour, je voudrais commander :",
-      `*${product.name}*`,
-      `Taille : ${selectedSize}`,
-      colorInfo ? `Couleur : ${colorInfo.name}` : null,
-      `Quantité : ${quantity}`,
-      `Prix unitaire : ${effectivePrice} TND`,
-      `*Total : ${total} TND*`,
-      "",
-      "📦 Informations de livraison :",
-      `Nom : ${orderForm.name}`,
-      `Tél : ${orderForm.phone}`,
-      orderForm.phone2 ? `Tél 2 : ${orderForm.phone2}` : null,
-      orderForm.address ? `Adresse : ${orderForm.address}` : null,
-      orderForm.delegation ? `Délégation : ${orderForm.delegation}` : null,
-      `Gouvernorat : ${orderForm.governorate}`,
-    ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/21693733766?text=${encodeURIComponent(msg)}`, "_blank");
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: orderForm.name.trim(),
+          phone: orderForm.phone.trim(),
+          phone2: orderForm.phone2?.trim() || null,
+          address: orderForm.address.trim() + (orderForm.delegation?.trim() ? `, ${orderForm.delegation.trim()}` : ""),
+          governorate: orderForm.governorate,
+          note: null,
+          items: [{
+            product_id: product.id,
+            product_name: product.name,
+            size: selectedSize,
+            color: colorInfo ? colorInfo.name : null,
+            color_hex: selectedColor || null,
+            quantity,
+            price: effectivePrice,
+            image: images[0] || product.images?.[0] || null,
+          }],
+          total_amount: total,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la commande");
+      setOrderPlaced(data.order_number);
+      setOrderForm({ name: "", phone: "", phone2: "", address: "", delegation: "", governorate: "" });
+      setQuantity(1);
+    } catch (err) {
+      toast.error(err.message || "Une erreur est survenue, veuillez réessayer");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -144,6 +172,32 @@ export default function ProductDetailPage() {
     return (
       <div className="pt-24 min-h-screen flex items-center justify-center text-neutral-400">
         Produit introuvable
+      </div>
+    );
+  }
+
+  if (orderPlaced) {
+    return (
+      <div className="pt-24 min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-xl p-10 border border-neutral-100">
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="font-serif text-3xl text-neutral-900 mb-2">Commande confirmée !</h2>
+          <p className="text-neutral-400 text-sm mb-6">Votre commande a bien été reçue. Notre équipe vous contactera bientôt pour confirmer la livraison.</p>
+          <div className="bg-neutral-50 rounded-xl px-6 py-4 mb-8 border border-neutral-100">
+            <p className="text-xs text-neutral-400 uppercase tracking-widest mb-1">Numéro de commande</p>
+            <p className="text-2xl font-bold text-neutral-900 tracking-wide">{orderPlaced}</p>
+          </div>
+          <button
+            onClick={() => setOrderPlaced(null)}
+            className="w-full border border-neutral-200 text-neutral-600 hover:border-neutral-900 hover:text-neutral-900 py-3 text-xs tracking-widest uppercase font-medium transition-all rounded-sm"
+          >
+            Continuer mes achats
+          </button>
+        </div>
       </div>
     );
   }
@@ -472,12 +526,13 @@ export default function ProductDetailPage() {
           {!product.is_coming_soon && (
             <button
               onClick={handleDirectOrder}
-              className="w-full mb-4 relative overflow-hidden rounded-xl py-4 text-base font-extrabold tracking-widest uppercase text-white shadow-xl transition-transform active:scale-[0.97]"
+              disabled={submitting}
+              className="w-full mb-4 relative overflow-hidden rounded-xl py-4 text-base font-extrabold tracking-widest uppercase text-white shadow-xl transition-transform active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed"
               style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)" }}
             >
-              <span className="absolute inset-0 bg-white/10 animate-pulse rounded-xl" />
+              {!submitting && <span className="absolute inset-0 bg-white/10 animate-pulse rounded-xl" />}
               <span className="relative flex items-center justify-center gap-2">
-                🛍️ Achetez maintenant
+                {submitting ? "⏳ Confirmation en cours..." : "🛍️ Achetez maintenant"}
               </span>
             </button>
           )}
