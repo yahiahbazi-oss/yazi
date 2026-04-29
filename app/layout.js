@@ -3,24 +3,107 @@ import { CartProvider } from "@/lib/cart-context";
 import MetaPixel from "@/components/MetaPixel";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import { Toaster } from "react-hot-toast";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
+
+const SITE_URL = "https://yazi-sable.vercel.app";
 
 export const metadata = {
-  title: "YAZI — Luxury Clothing",
-  description:
-    "Discover YAZI premium clothing. Timeless elegance, modern luxury. Shop the latest collection.",
-  openGraph: {
-    title: "YAZI — Luxury Clothing",
-    description:
-      "Discover YAZI premium clothing. Timeless elegance, modern luxury.",
-    type: "website",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "YAZI — Vêtements Femme & Homme en Tunisie | ملابس تونس",
+    template: "%s | YAZI Tunisie",
   },
+  description:
+    "YAZI — Boutique de vêtements en ligne en Tunisie. Robes, hijab, pulls, vestes en daim, jeans, manteaux pour femme et homme. Livraison partout en Tunisie. Paiement à la livraison. متجر ملابس أون لاين في تونس، فساتين، حجاب، بلوفر، جاكيت سويدي، توصيل لكامل تونس.",
+  keywords: [
+    // French
+    "vêtements tunisie", "boutique vêtements tunisie", "mode femme tunisie", "mode homme tunisie",
+    "robe tunisie", "hijab tunisie", "pull tunisie", "veste daim tunisie", "jean tunisie",
+    "manteau tunisie", "jupe tunisie", "chemise homme tunisie", "sweat capuche tunisie",
+    "t-shirt tunisie", "vêtements en ligne tunisie", "achat vêtements tunisie",
+    "livraison tunisie", "paiement à la livraison tunisie", "boutique mode tunisie",
+    "tendance mode tunisie 2026", "grande taille tunisie", "vêtements femme tunisie",
+    "vêtements homme tunisie", "collection vêtements tunisie", "soldes vêtements tunisie",
+    "veste femme tunisie", "veste homme tunisie", "robe soirée tunisie", "abaya tunisie",
+    "ensemble femme tunisie", "pantalon femme tunisie", "pantalon homme tunisie",
+    "legging tunisie", "cardigan tunisie", "chemise femme tunisie", "blouson tunisie",
+    "tunique tunisie", "robe décontractée tunisie", "YAZI tunisie",
+    // Arabic
+    "ملابس تونس", "متجر ملابس تونسي", "أزياء نسائية تونس", "أزياء رجالية تونس",
+    "فستان تونس", "حجاب تونس", "بلوفر تونس", "جاكيت سويدي تونس", "جينز تونس",
+    "معطف تونس", "تنورة تونس", "ملابس أون لاين تونس", "شراء ملابس تونس",
+    "توصيل تونس", "دفع عند الاستلام تونس", "موضة تونس 2026", "مقاسات كبيرة تونس",
+    "عباية تونس", "بدلة نسائية تونس", "قميص رجالي تونس", "بلوزة تونس",
+    // English
+    "clothes tunisia", "buy clothes online tunisia", "fashion tunisia",
+    "women fashion tunisia", "men fashion tunisia", "dress tunisia",
+    "hijab tunisia", "suede jacket tunisia", "jacket tunisia", "jeans tunisia",
+    "coat tunisia", "online clothing store tunisia", "clothing delivery tunisia",
+    "pay on delivery tunisia", "tunisian fashion 2026", "plus size clothes tunisia",
+    "YAZI clothing", "YAZI fashion tunisia",
+  ],
+  authors: [{ name: "YAZI", url: SITE_URL }],
+  creator: "YAZI",
+  publisher: "YAZI",
+  applicationName: "YAZI",
+  generator: "Next.js",
+  referrer: "origin-when-cross-origin",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      "fr-TN": SITE_URL,
+      "ar-TN": SITE_URL,
+      "en-TN": SITE_URL,
+    },
+  },
+  openGraph: {
+    title: "YAZI — Vêtements Femme & Homme en Tunisie | ملابس تونس",
+    description:
+      "Boutique mode en ligne en Tunisie. Robes, hijab, pulls, vestes, jeans. Livraison partout en Tunisie. Paiement à la livraison.",
+    url: SITE_URL,
+    siteName: "YAZI Tunisie",
+    locale: "fr_TN",
+    alternateLocale: ["ar_TN", "en_US"],
+    type: "website",
+    images: [
+      {
+        url: `${SITE_URL}/images/og-cover.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "YAZI — Boutique vêtements en ligne Tunisie",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "YAZI — Vêtements Femme & Homme en Tunisie",
+    description: "Boutique mode en ligne en Tunisie. Robes, hijab, pulls, vestes, jeans. Livraison partout en Tunisie.",
+    images: [`${SITE_URL}/images/og-cover.jpg`],
+  },
+  verification: {
+    google: "",
+  },
+  category: "fashion",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-white text-neutral-900">
         <CartProvider>
+          <OrganizationJsonLd />
+          <WebSiteJsonLd />
           <MetaPixel />
           <GoogleTagManager />
           <Toaster
