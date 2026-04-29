@@ -24,6 +24,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", phone2: "", address: "", delegation: "", governorate: "" });
   const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
@@ -102,6 +103,34 @@ export default function ProductDetailPage() {
     toast.success("Ajouté au panier");
   };
 
+  const handleDirectOrder = () => {
+    if (!selectedSize) { toast.error("Veuillez sélectionner une taille"); return; }
+    if (!orderForm.name.trim()) { toast.error("Veuillez entrer votre nom"); return; }
+    if (!orderForm.phone.trim()) { toast.error("Veuillez entrer votre numéro de téléphone"); return; }
+    if (!orderForm.governorate) { toast.error("Veuillez choisir un gouvernorat"); return; }
+    const effectivePrice = isBigSize(selectedSize) && product.big_size_price ? product.big_size_price : product.price;
+    const total = (effectivePrice * quantity).toFixed(2);
+    const colorInfo = selectedColor && product.color_variants?.[selectedColor];
+    const msg = [
+      "Bonjour, je voudrais commander :",
+      `*${product.name}*`,
+      `Taille : ${selectedSize}`,
+      colorInfo ? `Couleur : ${colorInfo.name}` : null,
+      `Quantité : ${quantity}`,
+      `Prix unitaire : ${effectivePrice} TND`,
+      `*Total : ${total} TND*`,
+      "",
+      "📦 Informations de livraison :",
+      `Nom : ${orderForm.name}`,
+      `Tél : ${orderForm.phone}`,
+      orderForm.phone2 ? `Tél 2 : ${orderForm.phone2}` : null,
+      orderForm.address ? `Adresse : ${orderForm.address}` : null,
+      orderForm.delegation ? `Délégation : ${orderForm.delegation}` : null,
+      `Gouvernorat : ${orderForm.governorate}`,
+    ].filter(Boolean).join("\n");
+    window.open(`https://wa.me/21693733766?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   if (loading) {
     return (
       <div className="pt-24 min-h-screen flex items-center justify-center">
@@ -169,11 +198,15 @@ export default function ProductDetailPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col"
         >
-          {product.category && (
-            <p className="text-neutral-400 text-xs tracking-[0.3em] uppercase mb-2">
-              {product.category}
-            </p>
-          )}
+          <div className="flex items-center justify-between mb-3">
+            {product.category ? (
+              <p className="text-neutral-400 text-xs tracking-[0.3em] uppercase">{product.category}</p>
+            ) : <span />}
+            <div className="flex items-center gap-0.5">
+              {[1,2,3,4,5].map((i) => <span key={i} className="text-amber-400 text-sm">★</span>)}
+              <span className="text-neutral-400 text-xs ml-1.5">4.8</span>
+            </div>
+          </div>
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-3">
@@ -204,9 +237,9 @@ export default function ProductDetailPage() {
           </h1>
 
           {/* Price */}
-          <div className="flex items-center gap-3 mb-2">
-            <p className="text-neutral-900 text-2xl font-serif">
-              {displayPrice ?? product.price} TND
+          <div className="flex items-baseline gap-3 mb-2">
+            <p className="text-4xl font-bold text-neutral-900">
+              {displayPrice ?? product.price} <span className="text-2xl font-medium">TND</span>
             </p>
             {!selectedSize || !isBigSize(selectedSize) ? (
               product.compare_price && product.compare_price > product.price && (
@@ -345,12 +378,66 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          {/* Inline Order Form */}
+          <div className="border-2 border-dashed border-neutral-200 rounded-xl p-5 bg-neutral-50/60 space-y-3 mb-5">
+            <h3 className="text-neutral-900 text-sm font-semibold tracking-wide mb-1">📦 Informations de livraison</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Nom et prénom *"
+                value={orderForm.name}
+                onChange={(e) => setOrderForm((p) => ({ ...p, name: e.target.value }))}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white"
+              />
+              <input
+                type="tel"
+                placeholder="Téléphone *"
+                value={orderForm.phone}
+                onChange={(e) => setOrderForm((p) => ({ ...p, phone: e.target.value }))}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white"
+              />
+            </div>
+            <input
+              type="tel"
+              placeholder="Téléphone supplémentaire"
+              value={orderForm.phone2}
+              onChange={(e) => setOrderForm((p) => ({ ...p, phone2: e.target.value }))}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Adresse"
+                value={orderForm.address}
+                onChange={(e) => setOrderForm((p) => ({ ...p, address: e.target.value }))}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white"
+              />
+              <input
+                type="text"
+                placeholder="Délégation"
+                value={orderForm.delegation}
+                onChange={(e) => setOrderForm((p) => ({ ...p, delegation: e.target.value }))}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white"
+              />
+            </div>
+            <select
+              value={orderForm.governorate}
+              onChange={(e) => setOrderForm((p) => ({ ...p, governorate: e.target.value }))}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-neutral-500 bg-white text-neutral-700"
+            >
+              <option value="">Choisir un gouvernorat *</option>
+              {["Ariana","Béja","Ben Arous","Bizerte","Gabès","Gafsa","Jendouba","Kairouan","Kasserine","Kébili","Le Kef","Mahdia","La Manouba","Médenine","Monastir","Nabeul","Sfax","Sidi Bouzid","Siliana","Sousse","Tataouine","Tozeur","Tunis","Zaghouan"].map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Stock urgency for selected size */}
           {selectedSize && (() => {
             const qty = product.stock?.[selectedSize] ?? 0;
             if (qty > 0 && qty <= 5) {
               return (
-                <p className="text-amber-600 text-xs font-medium mb-4 flex items-center gap-1">
+                <p className="text-amber-600 text-xs font-medium mb-3 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse inline-block" />
                   Plus que {qty} article{qty > 1 ? "s" : ""} en taille {selectedSize} !
                 </p>
@@ -360,62 +447,54 @@ export default function ProductDetailPage() {
           })()}
 
           {/* Quantity */}
-          <div className="mb-8">
-            <p className="text-neutral-500 text-xs tracking-widest uppercase mb-3">Quantité</p>
+          <div className="flex items-center gap-4 mb-5">
+            <p className="text-neutral-500 text-xs tracking-widest uppercase">Quantité</p>
             <div className="inline-flex items-center border border-neutral-200 rounded-sm">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-3 py-2 text-neutral-400 hover:text-neutral-700 transition-colors"
-              >
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 text-neutral-400 hover:text-neutral-700 transition-colors">
                 <Minus className="w-4 h-4" />
               </button>
               <span className="w-12 text-center text-sm text-neutral-900">{quantity}</span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="px-3 py-2 text-neutral-400 hover:text-neutral-700 transition-colors"
-              >
+              <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 text-neutral-400 hover:text-neutral-700 transition-colors">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
+            {selectedSize && (
+              <p className="ml-auto text-sm font-semibold text-neutral-900">
+                = {((displayPrice ?? product.price) * quantity).toFixed(2)} TND
+              </p>
+            )}
           </div>
 
-          {/* Add to Cart */}
+          {/* Commander maintenant — primary CTA */}
           {product.is_coming_soon ? (
-            <div className="w-full bg-neutral-200 text-neutral-400 py-4 text-sm tracking-widest uppercase font-medium text-center rounded-sm cursor-not-allowed">
-              Bient\u00f4t disponible
+            <div className="w-full bg-neutral-200 text-neutral-400 py-4 text-sm tracking-widest uppercase font-medium text-center rounded-sm cursor-not-allowed mb-3">
+              Bientôt disponible
             </div>
           ) : (
             <button
+              onClick={handleDirectOrder}
+              className="w-full bg-neutral-900 hover:bg-neutral-800 active:scale-[0.98] text-white py-4 text-sm tracking-widest uppercase font-semibold transition-all flex items-center justify-center gap-2 rounded-sm mb-3 shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 fill-white flex-shrink-0">
+                <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.34.63 4.63 1.827 6.64L2.667 29.333l6.907-1.8A13.267 13.267 0 0016.003 29.333c7.36 0 13.33-5.973 13.33-13.333S23.363 2.667 16.003 2.667zm0 24a10.6 10.6 0 01-5.413-1.48l-.387-.233-4.093 1.067 1.093-3.973-.253-.413A10.6 10.6 0 015.337 16c0-5.88 4.787-10.667 10.666-10.667S26.67 10.12 26.67 16 21.882 26.667 16.003 26.667zm5.84-7.987c-.32-.16-1.893-.933-2.187-1.04-.293-.107-.507-.16-.72.16-.213.32-.827 1.04-.947 1.253-.12.213-.24.24-.56.08-.32-.16-1.347-.493-2.56-1.573-.947-.84-1.587-1.88-1.773-2.2-.187-.32-.02-.493.14-.653.147-.147.32-.387.48-.573.16-.187.213-.32.32-.533.107-.213.053-.4-.027-.56-.08-.16-.72-1.733-.987-2.373-.253-.613-.52-.533-.72-.547-.187-.013-.4-.013-.613-.013-.213 0-.56.08-.853.373-.293.293-1.12 1.093-1.12 2.667 0 1.573 1.147 3.093 1.307 3.307.16.213 2.24 3.413 5.44 4.787.76.333 1.347.533 1.813.68.76.24 1.453.207 2 .127.613-.093 1.893-.773 2.16-1.52.267-.747.267-1.387.187-1.52-.08-.133-.293-.213-.613-.373z" />
+              </svg>
+              Commander maintenant
+            </button>
+          )}
+
+          {/* Add to cart — secondary */}
+          {!product.is_coming_soon && (
+            <button
               onClick={handleAddToCart}
-              className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-4 text-sm tracking-widest uppercase font-medium transition-colors flex items-center justify-center gap-2 rounded-sm"
+              className="w-full border border-neutral-300 hover:border-neutral-900 text-neutral-600 hover:text-neutral-900 py-3 text-xs tracking-widest uppercase font-medium transition-all flex items-center justify-center gap-2 rounded-sm mb-6"
             >
               <ShoppingBag className="w-4 h-4" />
               Ajouter au Panier
             </button>
           )}
 
-          {/* WhatsApp Order */}
-          <a
-            href={"https://wa.me/21693733766?text=" + encodeURIComponent(
-              "Bonjour, je voudrais commander :\n*" + product.name + "*" +
-              (selectedSize ? "\nTaille : " + selectedSize : "") +
-              (selectedColor && product.color_variants?.[selectedColor] ? "\nCouleur : " + product.color_variants[selectedColor].name : "") +
-              "\nQuantité : " + quantity +
-              "\nPrix unitaire : " + (displayPrice ?? product.price) + " TND" +
-              "\nTotal : " + ((displayPrice ?? product.price) * quantity) + " TND"
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full mt-3 border border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white py-3.5 text-sm tracking-widest uppercase font-medium transition-all flex items-center justify-center gap-2 rounded-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 fill-current">
-              <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.34.63 4.63 1.827 6.64L2.667 29.333l6.907-1.8A13.267 13.267 0 0016.003 29.333c7.36 0 13.33-5.973 13.33-13.333S23.363 2.667 16.003 2.667zm0 24a10.6 10.6 0 01-5.413-1.48l-.387-.233-4.093 1.067 1.093-3.973-.253-.413A10.6 10.6 0 015.337 16c0-5.88 4.787-10.667 10.666-10.667S26.67 10.12 26.67 16 21.882 26.667 16.003 26.667zm5.84-7.987c-.32-.16-1.893-.933-2.187-1.04-.293-.107-.507-.16-.72.16-.213.32-.827 1.04-.947 1.253-.12.213-.24.24-.56.08-.32-.16-1.347-.493-2.56-1.573-.947-.84-1.587-1.88-1.773-2.2-.187-.32-.02-.493.14-.653.147-.147.32-.387.48-.573.16-.187.213-.32.32-.533.107-.213.053-.4-.027-.56-.08-.16-.72-1.733-.987-2.373-.253-.613-.52-.533-.72-.547-.187-.013-.4-.013-.613-.013-.213 0-.56.08-.853.373-.293.293-1.12 1.093-1.12 2.667 0 1.573 1.147 3.093 1.307 3.307.16.213 2.24 3.413 5.44 4.787.76.333 1.347.533 1.813.68.76.24 1.453.207 2 .127.613-.093 1.893-.773 2.16-1.52.267-.747.267-1.387.187-1.52-.08-.133-.293-.213-.613-.373z" />
-            </svg>
-            Commander via WhatsApp
-          </a>
-
           {/* Trust Badges */}
-          <div className="mt-6 pt-6 border-t border-neutral-100 grid grid-cols-3 gap-3">
+          <div className="pt-5 border-t border-neutral-100 grid grid-cols-3 gap-3">
             {[
               { icon: "💳", text: "Paiement à la livraison" },
               { icon: "🚚", text: "Livraison rapide" },
