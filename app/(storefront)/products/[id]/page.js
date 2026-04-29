@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
@@ -26,6 +26,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [orderForm, setOrderForm] = useState({ name: "", phone: "", phone2: "", address: "", delegation: "", governorate: "" });
   const [recommendations, setRecommendations] = useState([]);
+  const formRef = useRef(null);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -250,9 +251,27 @@ export default function ProductDetailPage() {
             ) : null}
           </div>
 
-          <p className={`text-xs mb-5 font-medium ${product.delivery_price ? "text-neutral-500" : "text-green-600"}`}>
+          <p className={`text-xs mb-4 font-medium ${product.delivery_price ? "text-neutral-500" : "text-green-600"}`}>
             {product.delivery_price ? `🚚 Livraison : ${product.delivery_price} TND` : "✅ Livraison gratuite"}
           </p>
+
+          {/* FLASHY TOP CTA */}
+          {!product.is_coming_soon && (
+            <button
+              onClick={() => {
+                formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                setTimeout(() => formRef.current?.classList.add("ring-4", "ring-amber-400", "ring-offset-2"), 400);
+                setTimeout(() => formRef.current?.classList.remove("ring-4", "ring-amber-400", "ring-offset-2"), 1800);
+              }}
+              className="w-full mb-5 relative overflow-hidden rounded-xl py-4 text-base font-extrabold tracking-widest uppercase text-white shadow-xl transition-transform active:scale-[0.97]"
+              style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)" }}
+            >
+              <span className="absolute inset-0 bg-white/10 animate-pulse rounded-xl" />
+              <span className="relative flex items-center justify-center gap-2">
+                🛍️ Achetez maintenant
+              </span>
+            </button>
+          )}
 
           {product.description && (
             <div className="mb-8 pb-6 border-b border-neutral-100">
@@ -379,7 +398,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Inline Order Form */}
-          <div className="border-2 border-dashed border-neutral-200 rounded-xl p-5 bg-neutral-50/60 space-y-3 mb-5">
+          <div ref={formRef} className="border-2 border-dashed border-neutral-200 rounded-xl p-5 bg-neutral-50/60 space-y-3 mb-5 transition-all duration-500">
             <h3 className="text-neutral-900 text-sm font-semibold tracking-wide mb-1">📦 Informations de livraison</h3>
             <div className="grid grid-cols-2 gap-3">
               <input
