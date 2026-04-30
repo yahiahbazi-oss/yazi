@@ -1,4 +1,4 @@
-const SITE_URL = "https://yazi-sable.vercel.app";
+const SITE_URL = "https://www.yazi.tn";
 
 export default function robots() {
   return {

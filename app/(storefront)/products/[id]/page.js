@@ -1,7 +1,7 @@
 ﻿import { createServerClient } from "@/lib/supabase-server";
 import ProductDetailClient from "./ProductDetailClient";
 
-const SITE_URL = "https://yazi-sable.vercel.app";
+const SITE_URL = "https://www.yazi.tn";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;

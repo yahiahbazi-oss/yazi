@@ -5,10 +5,10 @@ export function OrganizationJsonLd() {
     "@type": "ClothingStore",
     name: "YAZI",
     alternateName: ["YAZI Tunisie", "YAZI متجر ملابس تونس"],
-    url: "https://yazi-sable.vercel.app",
-    logo: "https://yazi-sable.vercel.app/images/og-cover.jpg",
+    url: "https://www.yazi.tn",
+    logo: "https://www.yazi.tn/images/og-cover.jpg",
     description:
-      "Boutique de vêtements en ligne en Tunisie. Robes, hijab, pulls, vestes, jeans pour femme et homme. Livraison rapide. Paiement à la livraison.",
+      "YAZI.TN — Mangez italien, conduisez allemand, habillez-vous tunisien ! Vêtements femme et homme, robes, hijab, pulls, vestes, vêtements personnalisés. Livraison partout en Tunisie. Paiement à la livraison.",
     address: {
       "@type": "PostalAddress",
       addressCountry: "TN",
@@ -43,15 +43,15 @@ export function WebSiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "YAZI Tunisie",
-    url: "https://yazi-sable.vercel.app",
+    url: "https://www.yazi.tn",
     description:
-      "Boutique de vêtements en ligne en Tunisie — Robes, hijab, pulls, vestes pour femme et homme",
+      "YAZI.TN — Boutique de vêtements en ligne en Tunisie. Robes, hijab, pulls, vestes, vêtements personnalisés pour femme et homme.",
     inLanguage: ["fr-TN", "ar-TN"],
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://yazi-sable.vercel.app/?q={search_term_string}",
+        urlTemplate: "https://www.yazi.tn/?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -83,7 +83,7 @@ export function ProductJsonLd({ product, selectedSize, selectedColor }) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://yazi-sable.vercel.app/products/${product.id}`,
+      url: `https://www.yazi.tn/products/${product.id}`,
       priceCurrency: "TND",
       price: price,
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],

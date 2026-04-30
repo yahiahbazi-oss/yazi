@@ -1,6 +1,6 @@
 import { createServerClient } from "@/lib/supabase-server";
 
-const SITE_URL = "https://yazi-sable.vercel.app";
+const SITE_URL = "https://www.yazi.tn";
 
 export const revalidate = 3600; // regenerate every hour
 
