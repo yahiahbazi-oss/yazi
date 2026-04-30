@@ -104,7 +104,7 @@ export const metadata = {
     images: [`${SITE_URL}/images/og-cover.jpg`],
   },
   verification: {
-    google: "",
+    google: "f3sWgm9AVxJs8n9l3JOOTQ8CjDK_t88XJVioGHsGaMw",
   },
   category: "fashion",
 };
