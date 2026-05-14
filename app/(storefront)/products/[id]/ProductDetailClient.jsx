@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
     <>
       <ProductJsonLd product={product} selectedSize={selectedSize} selectedColor={selectedColor} />
       <div className="pt-24 sm:pt-28 pb-20 px-4 sm:px-6 max-w-7xl mx-auto min-h-screen">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
         {/* Image Gallery */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
