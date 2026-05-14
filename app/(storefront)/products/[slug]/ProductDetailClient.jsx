@@ -17,7 +17,7 @@ const EU_SIZES = ["36", "38", "40", "42", "44", "46", "48"];
 const isBigSize = (s) => BIG_SIZES.includes(s);
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { addItem } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,11 +33,21 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     async function fetchProduct() {
-      const { data } = await supabase
+      // Try by slug first, fall back to UUID for old links
+      let { data } = await supabase
         .from("products")
         .select("*")
-        .eq("id", id)
-        .single();
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (!data) {
+        const { data: byId } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", slug)
+          .maybeSingle();
+        data = byId;
+      }
       setProduct(data);
       setLoading(false);
       if (data) {
@@ -57,7 +67,7 @@ export default function ProductDetailPage() {
       }
     }
     fetchProduct();
-  }, [id]);
+  }, [slug]);
 
   const getImages = () => {
     if (selectedColor && product?.color_variants?.[selectedColor]?.images?.length > 0) {

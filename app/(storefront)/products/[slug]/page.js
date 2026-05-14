@@ -4,13 +4,26 @@ import ProductDetailClient from "./ProductDetailClient";
 const SITE_URL = "https://www.yazi.tn";
 
 export async function generateMetadata({ params }) {
-  const { id } = await params;
+  const { slug } = await params;
   const supabase = createServerClient();
-  const { data: product } = await supabase
+
+  // Try by slug first, fall back to UUID for old links
+  let { data: product } = await supabase
     .from("products")
-    .select("id, name, description, price, category, gender, images, compare_price")
-    .eq("id", id)
-    .single();
+    .select("id, name, description, price, category, gender, images, compare_price, slug")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!product) {
+    const { data } = await supabase
+      .from("products")
+      .select("id, name, description, price, category, gender, images, compare_price, slug")
+      .eq("id", slug)
+      .maybeSingle();
+    product = data;
+  }
+
+  const productSlug = product?.slug || product?.id;
 
   if (!product) {
     return {
@@ -48,12 +61,12 @@ export async function generateMetadata({ params }) {
       "YAZI tunisie",
     ].filter(Boolean),
     alternates: {
-      canonical: `${SITE_URL}/products/${id}`,
+      canonical: `${SITE_URL}/products/${productSlug}`,
     },
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/products/${id}`,
+      url: `${SITE_URL}/products/${productSlug}`,
       siteName: "YAZI Tunisie",
       type: "website",
       images: image

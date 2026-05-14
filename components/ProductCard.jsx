@@ -53,7 +53,7 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className="group"
     >
-      <Link href={`/products/${product.id}`} className="block">
+      <Link href={`/products/${product.slug || product.id}`} className="block">
         <div
           className="relative aspect-[3/4] overflow-hidden bg-neutral-100 rounded-sm"
           onMouseEnter={() => setIsCardHovered(true)}

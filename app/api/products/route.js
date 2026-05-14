@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { generateUniqueSlug } from "@/lib/slugify";
 
 // GET: List products
 export async function GET() {
@@ -36,6 +37,7 @@ export async function POST(request) {
     }
 
     const supabase = createServerClient();
+    const slug = await generateUniqueSlug(supabase, name.trim());
 
     const { data, error } = await supabase
       .from("products")
@@ -57,6 +59,7 @@ export async function POST(request) {
         big_size_price: big_size_price !== undefined && big_size_price !== null && big_size_price !== '' ? big_size_price : null,
         collection_slugs: Array.isArray(collection_slugs) ? collection_slugs : [],
         recommended_product_ids: Array.isArray(recommended_product_ids) ? recommended_product_ids : [],
+        slug,
         is_active: true,
       })
       .select()
