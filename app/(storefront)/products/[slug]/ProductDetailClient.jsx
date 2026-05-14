@@ -32,15 +32,24 @@ export default function ProductDetailPage() {
   const formRef = useRef(null);
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const UUID_PREFIX_RE = /^[0-9a-f]{8}$/i;
 
   useEffect(() => {
     async function fetchProduct() {
-      const col = UUID_RE.test(slug) ? "id" : "slug";
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq(col, slug)
-        .single();
+      let data = null;
+      if (UUID_RE.test(slug)) {
+        // Full UUID
+        const res = await supabase.from("products").select("*").eq("id", slug).single();
+        data = res.data;
+      } else {
+        // "name-slug-b0d104cc" — extract UUID prefix from last segment
+        const parts = slug.split("-");
+        const uuidPrefix = parts[parts.length - 1];
+        if (UUID_PREFIX_RE.test(uuidPrefix)) {
+          const res = await supabase.from("products").select("*");
+          data = (res.data || []).find((p) => p.id.startsWith(uuidPrefix)) || null;
+        }
+      }
       setProduct(data);
       setLoading(false);
       if (data) {

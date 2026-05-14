@@ -4,6 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
+function productHref(product) {
+  const nameSlug = product.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+  const uuidPrefix = product.id.split("-")[0];
+  return `/products/${nameSlug}-${uuidPrefix}`;
+}
+
 export default function ProductCard({ product, index = 0, overridePrice = null }) {
   const [hoveredColor, setHoveredColor] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -53,7 +66,7 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className="group"
     >
-      <Link href={`/products/${product.slug || product.id}`} className="block">
+      <Link href={productHref(product)} className="block">
         <div
           className="relative aspect-[3/4] overflow-hidden bg-neutral-100 rounded-sm"
           onMouseEnter={() => setIsCardHovered(true)}

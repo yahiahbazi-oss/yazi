@@ -3,15 +3,23 @@ import ProductDetailClient from "./ProductDetailClient";
 
 const SITE_URL = "https://www.yazi.tn";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// First segment of a UUID is 8 hex chars
+const UUID_PREFIX_RE = /^[0-9a-f]{8}$/i;
 
-async function getProduct(supabase, slugOrId) {
-  const col = UUID_RE.test(slugOrId) ? "id" : "slug";
-  const { data } = await supabase
-    .from("products")
-    .select("id, slug, name, description, price, category, gender, images, compare_price, color_variants")
-    .eq(col, slugOrId)
-    .single();
-  return data;
+async function getProduct(supabase, slugParam) {
+  // Full UUID → look up directly
+  if (UUID_RE.test(slugParam)) {
+    const { data } = await supabase.from("products").select("*").eq("id", slugParam).single();
+    return data;
+  }
+  // "name-slug-b0d104cc" format → last segment is UUID first segment
+  const parts = slugParam.split("-");
+  const uuidPrefix = parts[parts.length - 1];
+  if (UUID_PREFIX_RE.test(uuidPrefix)) {
+    const { data: all } = await supabase.from("products").select("*").eq("is_active", true);
+    return (all || []).find((p) => p.id.startsWith(uuidPrefix)) || null;
+  }
+  return null;
 }
 
 export async function generateMetadata({ params }) {
@@ -26,7 +34,7 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const canonicalSlug = product.slug || product.id;
+  const canonicalSlug = slug; // keep the slug as-is for canonical
   const genderLabel =
     product.gender === "men" ? "Homme" : product.gender === "women" ? "Femme" : "Unisexe";
   const priceLabel = `${product.price} TND`;

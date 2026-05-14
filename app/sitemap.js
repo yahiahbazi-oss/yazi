@@ -10,7 +10,7 @@ export default async function sitemap() {
   // Fetch all active products
   const { data: products } = await supabase
     .from("products")
-    .select("id, slug, updated_at")
+    .select("id, name, updated_at")
     .eq("is_active", true);
 
   // Fetch all categories/slugs
@@ -19,7 +19,7 @@ export default async function sitemap() {
     .select("slug, updated_at");
 
   const productUrls = (products || []).map((p) => ({
-    url: `${SITE_URL}/products/${p.slug || p.id}`,
+    url: `${SITE_URL}/products/${p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-")}-${p.id.split("-")[0]}`,
     lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
     changeFrequency: "weekly",
     priority: 0.8,

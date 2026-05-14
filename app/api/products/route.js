@@ -1,33 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
-function toSlug(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-async function generateUniqueSlug(supabase, name, excludeId = null) {
-  const base = toSlug(name);
-  let slug = base;
-  let counter = 2;
-  while (true) {
-    let query = supabase.from("products").select("id").eq("slug", slug);
-    if (excludeId) query = query.neq("id", excludeId);
-    const { data } = await query;
-    if (!data || data.length === 0) break;
-    slug = `${base}-${counter}`;
-    counter++;
-  }
-  return slug;
-}
-
 // GET: List products
 export async function GET() {
   try {
@@ -63,13 +36,11 @@ export async function POST(request) {
     }
 
     const supabase = createServerClient();
-    const slug = await generateUniqueSlug(supabase, name.trim());
 
     const { data, error } = await supabase
       .from("products")
       .insert({
         name: name.trim(),
-        slug,
         description: description?.trim() || null,
         price,
         images: images || [],

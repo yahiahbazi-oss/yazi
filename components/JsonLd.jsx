@@ -83,7 +83,7 @@ export function ProductJsonLd({ product, selectedSize, selectedColor }) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://www.yazi.tn/products/${product.slug || product.id}`,
+      url: `https://www.yazi.tn/products/${product.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-")}-${product.id.split("-")[0]}`,
       priceCurrency: "TND",
       price: price,
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],

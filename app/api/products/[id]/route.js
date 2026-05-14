@@ -1,31 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
-function toSlug(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-async function generateUniqueSlug(supabase, name, excludeId) {
-  const base = toSlug(name);
-  let slug = base;
-  let counter = 2;
-  while (true) {
-    const { data } = await supabase.from("products").select("id").eq("slug", slug).neq("id", excludeId);
-    if (!data || data.length === 0) break;
-    slug = `${base}-${counter}`;
-    counter++;
-  }
-  return slug;
-}
-
 // PATCH: Update product
 export async function PATCH(request, { params }) {
   try {
@@ -58,11 +33,6 @@ export async function PATCH(request, { params }) {
       if (body[key] !== undefined) {
         updates[key] = body[key];
       }
-    }
-
-    // Regenerate slug if name is being updated
-    if (body.name?.trim()) {
-      updates.slug = await generateUniqueSlug(supabase, body.name.trim(), id);
     }
 
     const { data, error } = await supabase
