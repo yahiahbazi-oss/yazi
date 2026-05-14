@@ -232,7 +232,7 @@ export default function ProductsPage() {
             <div key={product.id} className={`bg-white border rounded-xl overflow-hidden ${product.is_active ? "border-neutral-200" : "border-red-200 opacity-60"}`}>
               <div className="aspect-[4/3] bg-neutral-100 relative">
                 {getFirstImage(product) ? (
-                  <img src={getFirstImage(product)} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={getFirstImage(product)} alt={product.name} className="w-full h-full object-contain" />
                 ) : (
                   <div className="flex items-center justify-center h-full text-neutral-300 text-sm">No Image</div>
                 )}
@@ -382,7 +382,7 @@ export default function ProductsPage() {
                               <div className="flex flex-wrap gap-2">
                                 {variant.images.map((url, i) => (
                                   <div key={i} className="relative w-16 h-16 bg-neutral-100 rounded-lg overflow-hidden group">
-                                    <img src={url} alt="" className="w-full h-full object-cover" />
+                                    <img src={url} alt="" className="w-full h-full object-contain" />
                                     <button type="button" onClick={() => removeImageFromColor(hex, i)} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                       <X className="w-4 h-4 text-white" />
                                     </button>
@@ -513,7 +513,7 @@ export default function ProductsPage() {
                             className="w-4 h-4 accent-neutral-900 flex-shrink-0"
                           />
                           {getFirstImage(p) && (
-                            <img src={getFirstImage(p)} alt="" className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                            <img src={getFirstImage(p)} alt="" className="w-8 h-8 object-contain rounded flex-shrink-0" />
                           )}
                           <span className="text-sm text-neutral-700 flex-1 truncate">{p.name}</span>
                           <span className="text-xs text-neutral-400 flex-shrink-0">{p.price} TND</span>

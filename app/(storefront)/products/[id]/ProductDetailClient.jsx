@@ -228,7 +228,7 @@ export default function ProductDetailPage() {
                       : "border-transparent hover:border-neutral-300"
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-contain" />
                 </button>
               ))}
             </div>
@@ -239,7 +239,7 @@ export default function ProductDetailPage() {
               <img
                 src={images[selectedImage] || images[0]}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-neutral-300">

@@ -63,7 +63,7 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
             <img
               src={displayImage}
               alt={product.name}
-              className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
+              className="absolute inset-0 w-full h-full object-contain transition-all duration-500"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-neutral-300 text-sm">
