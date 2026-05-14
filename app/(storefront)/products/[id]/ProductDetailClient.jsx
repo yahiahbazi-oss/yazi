@@ -234,15 +234,15 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          <div className="relative flex-1 aspect-[3/4] bg-neutral-50 rounded-sm overflow-hidden">
+          <div className="flex-1 bg-neutral-50 rounded-sm overflow-hidden">
             {images.length > 0 ? (
               <img
                 src={images[selectedImage] || images[0]}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-auto block"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-neutral-300">
+              <div className="w-full py-20 flex items-center justify-center text-neutral-300">
                 Pas d&apos;image
               </div>
             )}
