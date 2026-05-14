@@ -83,7 +83,7 @@ export function ProductJsonLd({ product, selectedSize, selectedColor }) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://www.yazi.tn/products/${product.id}`,
+      url: `https://www.yazi.tn/products/${product.slug || product.id}`,
       priceCurrency: "TND",
       price: price,
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],

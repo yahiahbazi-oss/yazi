@@ -2,28 +2,22 @@
 import ProductDetailClient from "./ProductDetailClient";
 
 const SITE_URL = "https://www.yazi.tn";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function getProduct(supabase, slugOrId) {
+  const col = UUID_RE.test(slugOrId) ? "id" : "slug";
+  const { data } = await supabase
+    .from("products")
+    .select("id, slug, name, description, price, category, gender, images, compare_price, color_variants")
+    .eq(col, slugOrId)
+    .single();
+  return data;
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const supabase = createServerClient();
-
-  // Try by slug first, fall back to UUID for old links
-  let { data: product } = await supabase
-    .from("products")
-    .select("id, name, description, price, category, gender, images, compare_price, slug")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (!product) {
-    const { data } = await supabase
-      .from("products")
-      .select("id, name, description, price, category, gender, images, compare_price, slug")
-      .eq("id", slug)
-      .maybeSingle();
-    product = data;
-  }
-
-  const productSlug = product?.slug || product?.id;
+  const product = await getProduct(supabase, slug);
 
   if (!product) {
     return {
@@ -32,6 +26,7 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  const canonicalSlug = product.slug || product.id;
   const genderLabel =
     product.gender === "men" ? "Homme" : product.gender === "women" ? "Femme" : "Unisexe";
   const priceLabel = `${product.price} TND`;
@@ -61,12 +56,12 @@ export async function generateMetadata({ params }) {
       "YAZI tunisie",
     ].filter(Boolean),
     alternates: {
-      canonical: `${SITE_URL}/products/${productSlug}`,
+      canonical: `${SITE_URL}/products/${canonicalSlug}`,
     },
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/products/${productSlug}`,
+      url: `${SITE_URL}/products/${canonicalSlug}`,
       siteName: "YAZI Tunisie",
       type: "website",
       images: image

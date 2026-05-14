@@ -31,23 +31,16 @@ export default function ProductDetailPage() {
   const [orderPlaced, setOrderPlaced] = useState(null);
   const formRef = useRef(null);
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   useEffect(() => {
     async function fetchProduct() {
-      // Try by slug first, fall back to UUID for old links
-      let { data } = await supabase
+      const col = UUID_RE.test(slug) ? "id" : "slug";
+      const { data } = await supabase
         .from("products")
         .select("*")
-        .eq("slug", slug)
-        .maybeSingle();
-
-      if (!data) {
-        const { data: byId } = await supabase
-          .from("products")
-          .select("*")
-          .eq("id", slug)
-          .maybeSingle();
-        data = byId;
-      }
+        .eq(col, slug)
+        .single();
       setProduct(data);
       setLoading(false);
       if (data) {
