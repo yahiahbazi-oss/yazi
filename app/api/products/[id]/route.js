@@ -27,6 +27,9 @@ export async function PATCH(request, { params }) {
       "big_size_price",
       "collection_slugs",
       "recommended_product_ids",
+      "target_countries",
+      "prices",
+      "delivery_fees",
     ];
     const updates = {};
     for (const key of allowedFields) {

@@ -1,21 +1,31 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { getCountryFromHeaders } from "@/lib/geolocation";
 
-// GET: List products
-export async function GET() {
+// GET: List products (optionally filtered by country)
+export async function GET(request) {
   try {
     const supabase = createServerClient();
+    const { searchParams } = new URL(request.url);
+    const country = searchParams.get("country") || getCountryFromHeaders(request.headers);
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("products")
       .select("*")
       .order("created_at", { ascending: false });
+
+    // Filter by country if specified (products where target_countries contains country code)
+    if (country && country !== "ALL") {
+      query = query.contains("target_countries", [country]);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
     }
 
-    return NextResponse.json({ products: data });
+    return NextResponse.json({ products: data, country });
   } catch (err) {
     console.error("Products GET error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -26,7 +36,12 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, description, price, images, category, category_id, gender, color_variants, stock, is_new, delivery_price, is_trending, is_coming_soon, compare_price, big_size_price, collection_slugs, recommended_product_ids } = body;
+    const { 
+      name, description, price, images, category, category_id, gender, 
+      color_variants, stock, is_new, delivery_price, is_trending, is_coming_soon, 
+      compare_price, big_size_price, collection_slugs, recommended_product_ids,
+      target_countries, prices, delivery_fees 
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Product name is required" }, { status: 400 });
@@ -57,6 +72,9 @@ export async function POST(request) {
         big_size_price: big_size_price !== undefined && big_size_price !== null && big_size_price !== '' ? big_size_price : null,
         collection_slugs: Array.isArray(collection_slugs) ? collection_slugs : [],
         recommended_product_ids: Array.isArray(recommended_product_ids) ? recommended_product_ids : [],
+        target_countries: target_countries || ["TN"],
+        prices: prices || { TN: { price, currency: "TND" } },
+        delivery_fees: delivery_fees || { TN: 8 },
         is_active: true,
       })
       .select()

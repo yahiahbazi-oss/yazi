@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
+import { COUNTRIES, getCurrencyByCode } from "@/lib/countries";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const BIG_SIZES = ["3XL", "4XL", "5XL"];
@@ -24,6 +25,9 @@ const emptyProduct = {
   collection_slugs: [],
   recommended_product_ids: [],
   stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
+  target_countries: ["TN"],
+  prices: { TN: { price: "", currency: "TND" } },
+  delivery_fees: { TN: 8 },
 };
 
 export default function ProductsPage() {
@@ -75,6 +79,11 @@ export default function ProductsPage() {
   };
 
   const openEdit = (product) => {
+    // Prepare multi-country data
+    const targetCountries = product.target_countries || ["TN"];
+    const prices = product.prices || { TN: { price: product.price || "", currency: "TND" } };
+    const deliveryFees = product.delivery_fees || { TN: product.delivery_price || 8 };
+    
     setForm({
       name: product.name || "",
       description: product.description || "",
@@ -91,6 +100,9 @@ export default function ProductsPage() {
       collection_slugs: product.collection_slugs || [],
       recommended_product_ids: product.recommended_product_ids || [],
       stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
+      target_countries: targetCountries,
+      prices: prices,
+      delivery_fees: deliveryFees,
     });
     setEditingId(product.id);
     setEditingColor(null);
@@ -150,6 +162,10 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Product name is required");
     if (!form.price || parseFloat(form.price) <= 0) return toast.error("Valid price is required");
+    
+    // Validate multi-country pricing
+    if (form.target_countries.length === 0) return toast.error("Select at least one country");
+    
     setSaving(true);
     try {
       const url = editingId ? `/api/products/${editingId}` : "/api/products";
@@ -157,7 +173,17 @@ export default function ProductsPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, price: parseFloat(form.price), compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, big_size_price: form.big_size_price !== '' && form.big_size_price !== null ? parseFloat(form.big_size_price) : null, category_id: form.category_id || null, delivery_price: form.delivery_price !== null && form.delivery_price !== '' ? parseFloat(form.delivery_price) : null }),
+        body: JSON.stringify({ 
+          ...form, 
+          price: parseFloat(form.price), 
+          compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, 
+          big_size_price: form.big_size_price !== '' && form.big_size_price !== null ? parseFloat(form.big_size_price) : null, 
+          category_id: form.category_id || null, 
+          delivery_price: form.delivery_price !== null && form.delivery_price !== '' ? parseFloat(form.delivery_price) : null,
+          target_countries: form.target_countries,
+          prices: form.prices,
+          delivery_fees: form.delivery_fees,
+        }),
       });
       if (!res.ok) throw new Error();
       toast.success(editingId ? "Product updated" : "Product created");
@@ -341,6 +367,130 @@ export default function ProductsPage() {
                       {g}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Multi-Country Pricing */}
+              <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4 space-y-4">
+                <div>
+                  <label className="text-blue-900 text-xs tracking-wider uppercase block mb-2 font-semibold">🌍 Target Countries & Pricing</label>
+                  <p className="text-blue-700 text-xs mb-3">Select countries where this product will be available. Set price and delivery fee per country.</p>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {COUNTRIES.map((country) => {
+                      const isSelected = form.target_countries.includes(country.code);
+                      return (
+                        <button
+                          key={country.code}
+                          type="button"
+                          onClick={() => {
+                            const newCountries = isSelected
+                              ? form.target_countries.filter((c) => c !== country.code)
+                              : [...form.target_countries, country.code];
+                            
+                            // Initialize pricing for new country
+                            if (!isSelected) {
+                              const newPrices = { ...form.prices };
+                              newPrices[country.code] = { 
+                                price: form.price || "", 
+                                currency: country.currency 
+                              };
+                              const newFees = { ...form.delivery_fees };
+                              newFees[country.code] = 8;
+                              setForm((p) => ({ 
+                                ...p, 
+                                target_countries: newCountries,
+                                prices: newPrices,
+                                delivery_fees: newFees,
+                              }));
+                            } else {
+                              // Remove pricing for deselected country
+                              const newPrices = { ...form.prices };
+                              delete newPrices[country.code];
+                              const newFees = { ...form.delivery_fees };
+                              delete newFees[country.code];
+                              setForm((p) => ({ 
+                                ...p, 
+                                target_countries: newCountries,
+                                prices: newPrices,
+                                delivery_fees: newFees,
+                              }));
+                            }
+                          }}
+                          className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                            isSelected
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-neutral-300 text-neutral-600 hover:border-blue-400 bg-white"
+                          }`}
+                        >
+                          {country.flag} {country.code}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pricing per selected country */}
+                  {form.target_countries.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-blue-700 text-xs font-medium">Set prices for selected countries:</p>
+                      {form.target_countries.map((countryCode) => {
+                        const country = COUNTRIES.find((c) => c.code === countryCode);
+                        if (!country) return null;
+                        const currencyInfo = getCurrencyByCode(country.currency);
+                        const priceData = form.prices[countryCode] || { price: "", currency: country.currency };
+                        const deliveryFee = form.delivery_fees[countryCode] || 8;
+
+                        return (
+                          <div key={countryCode} className="bg-white border border-neutral-200 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">{country.flag}</span>
+                              <span className="font-medium text-sm text-neutral-900">{country.name}</span>
+                              <span className="text-xs text-neutral-500">({currencyInfo?.symbol || country.currency})</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-neutral-500 text-xs block mb-1">Price *</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={priceData.price}
+                                  onChange={(e) => {
+                                    const newPrices = { ...form.prices };
+                                    newPrices[countryCode] = {
+                                      ...newPrices[countryCode],
+                                      price: e.target.value,
+                                      currency: country.currency,
+                                    };
+                                    setForm((p) => ({ ...p, prices: newPrices }));
+                                  }}
+                                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neutral-400"
+                                  placeholder={`0.00 ${currencyInfo?.symbol || country.currency}`}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="text-neutral-500 text-xs block mb-1">Delivery Fee</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={deliveryFee}
+                                  onChange={(e) => {
+                                    const newFees = { ...form.delivery_fees };
+                                    newFees[countryCode] = parseFloat(e.target.value) || 0;
+                                    setForm((p) => ({ ...p, delivery_fees: newFees }));
+                                  }}
+                                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neutral-400"
+                                  placeholder={`0.00 ${currencyInfo?.symbol || country.currency}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 

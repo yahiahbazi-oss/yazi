@@ -1,9 +1,8 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { useInternational } from "@/lib/international-context";
 
 function productHref(product) {
   const nameSlug = product.name
@@ -19,28 +18,9 @@ function productHref(product) {
 }
 
 export default function ProductCard({ product, index = 0, overridePrice = null }) {
-  const { currency, formatPrice, convertPrice } = useInternational();
   const [hoveredColor, setHoveredColor] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [isCardHovered, setIsCardHovered] = useState(false);
-  const [displayPrice, setDisplayPrice] = useState(null);
-  const [displayComparePrice, setDisplayComparePrice] = useState(null);
-
-  useEffect(() => {
-    async function updatePrices() {
-      const basePrice = overridePrice ?? product.price;
-      const converted = await convertPrice(basePrice);
-      setDisplayPrice(converted);
-
-      if (!overridePrice && product.compare_price && product.compare_price > product.price) {
-        const convertedCompare = await convertPrice(product.compare_price);
-        setDisplayComparePrice(convertedCompare);
-      } else {
-        setDisplayComparePrice(null);
-      }
-    }
-    updatePrices();
-  }, [currency, product.price, product.compare_price, overridePrice, convertPrice]);
 
   const cv = product.color_variants && typeof product.color_variants === "object" ? product.color_variants : null;
   const colors = cv ? Object.keys(cv) : [];
@@ -150,11 +130,9 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
             {product.name}
           </h3>
           <div className="flex items-center gap-2 flex-wrap">
-            {displayPrice !== null && (
-              <p className="text-neutral-900 text-sm font-medium">{formatPrice(displayPrice)}</p>
-            )}
-            {displayComparePrice !== null && (
-              <p className="text-neutral-400 text-sm line-through">{formatPrice(displayComparePrice)}</p>
+            <p className="text-neutral-900 text-sm font-medium">{overridePrice ?? product.price} TND</p>
+            {!overridePrice && product.compare_price && product.compare_price > product.price && (
+              <p className="text-neutral-400 text-sm line-through">{product.compare_price} TND</p>
             )}
           </div>
         </div>

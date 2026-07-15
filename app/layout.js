@@ -1,6 +1,6 @@
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
-import { InternationalProvider } from "@/lib/international-context";
+import { LocationProvider } from "@/lib/location-context";
 import MetaPixel from "@/components/MetaPixel";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import { Toaster } from "react-hot-toast";
@@ -121,7 +121,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-white text-neutral-900">
-        <InternationalProvider>
+        <LocationProvider>
           <CartProvider>
             <OrganizationJsonLd />
             <WebSiteJsonLd />
@@ -140,7 +140,7 @@ export default function RootLayout({ children }) {
             />
             {children}
           </CartProvider>
-        </InternationalProvider>
+        </LocationProvider>
       </body>
     </html>
   );
