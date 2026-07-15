@@ -21,14 +21,31 @@ export default function HomePage() {
     async function fetchAll() {
       if (locationLoading) return;
       
+      // Fetch all products without country filter initially (for backward compatibility)
       const [productsRes, collectionsRes, settingsRes] = await Promise.all([
-        fetch(`/api/products?country=${country}`),
+        fetch(`/api/products?country=ALL`),
         fetch("/api/collections"),
         fetch("/api/settings"),
       ]);
       
       const productsData = await productsRes.json();
-      setProducts((productsData.products || []).filter(p => p.is_active));
+      console.log('Fetched products:', productsData.products?.length || 0, 'products');
+      
+      // Filter products by country on client side (fallback if target_countries not set)
+      const allProducts = (productsData.products || []).filter(p => {
+        if (!p.is_active) return false;
+        
+        // If product has target_countries, check if user's country is included
+        if (p.target_countries && Array.isArray(p.target_countries)) {
+          return p.target_countries.includes(country);
+        }
+        
+        // Backward compatibility: if no target_countries, show all products
+        return true;
+      });
+      
+      console.log('Filtered products for country', country, ':', allProducts.length);
+      setProducts(allProducts);
       
       const colData = await collectionsRes.json();
       setCollections(colData.collections || []);

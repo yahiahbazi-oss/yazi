@@ -18,10 +18,21 @@ export default function ProductsPage() {
       // Wait for location to be detected
       if (locationLoading) return;
       
-      const res = await fetch(`/api/products?country=${country}`);
+      const res = await fetch(`/api/products?country=ALL`);
       const data = await res.json();
       
-      let filtered = (data.products || []).filter((p) => p.is_active);
+      // Filter by country on client side (backward compatible)
+      let filtered = (data.products || []).filter((p) => {
+        if (!p.is_active) return false;
+        
+        // If product has target_countries, check if user's country is included
+        if (p.target_countries && Array.isArray(p.target_countries)) {
+          return p.target_countries.includes(country);
+        }
+        
+        // Backward compatibility: if no target_countries, show all products
+        return true;
+      });
 
       if (gender !== "all") {
         filtered = filtered.filter((p) => p.gender === gender || p.gender === "unisex");
