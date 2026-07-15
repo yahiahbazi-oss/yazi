@@ -133,7 +133,14 @@ export default function ProductDetailPage() {
     if (!orderForm.governorate) { toast.error("Veuillez choisir un gouvernorat"); return; }
 
     const effectivePrice = isBigSize(selectedSize) && product.big_size_price ? product.big_size_price : product.price;
-    const total = parseFloat((effectivePrice * quantity).toFixed(2));
+    const subtotal = effectivePrice * quantity;
+    
+    // Calculate delivery fee: use product-specific delivery price if set, otherwise default 8 TND
+    const deliveryFee = product.delivery_price !== null && product.delivery_price !== undefined 
+      ? product.delivery_price 
+      : 8;
+    
+    const total = subtotal + deliveryFee;
     const colorInfo = selectedColor && product.color_variants?.[selectedColor];
 
     setSubmitting(true);

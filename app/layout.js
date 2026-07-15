@@ -15,6 +15,13 @@ export const metadata = {
   },
   description:
     "YAZI.TN — Mangez italien, conduisez allemand, habillez-vous tunisien ! Boutique de vêtements en ligne en Tunisie. Robes, hijab, pulls, vestes en daim, jeans, vêtements personnalisés pour femme et homme. Livraison partout en Tunisie. Paiement à la livraison. كُلْ إيطالي، اقُدْ ألماني، البسْ تونسي — متجر ملابس تونس.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "any" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icon.png",
+  },
   keywords: [
     // French
     "vêtements tunisie", "boutique vêtements tunisie", "mode femme tunisie", "mode homme tunisie",
