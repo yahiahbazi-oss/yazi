@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import CurrencySelector from "@/components/CurrencySelector";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,7 +27,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <CurrencySelector />
             <button onClick={() => setIsOpen(true)} className="relative text-neutral-500 hover:text-neutral-900 transition-colors">
               <ShoppingBag className="w-5 h-5" />
               {totalItems > 0 && (

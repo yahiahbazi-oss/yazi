@@ -1,5 +1,6 @@
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
+import { InternationalProvider } from "@/lib/international-context";
 import MetaPixel from "@/components/MetaPixel";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import { Toaster } from "react-hot-toast";
@@ -120,24 +121,26 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-white text-neutral-900">
-        <CartProvider>
-          <OrganizationJsonLd />
-          <WebSiteJsonLd />
-          <MetaPixel />
-          <GoogleTagManager />
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              style: {
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #e5e5e5",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              },
-            }}
-          />
-          {children}
-        </CartProvider>
+        <InternationalProvider>
+          <CartProvider>
+            <OrganizationJsonLd />
+            <WebSiteJsonLd />
+            <MetaPixel />
+            <GoogleTagManager />
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: "#fff",
+                  color: "#111",
+                  border: "1px solid #e5e5e5",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                },
+              }}
+            />
+            {children}
+          </CartProvider>
+        </InternationalProvider>
       </body>
     </html>
   );
