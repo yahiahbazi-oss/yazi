@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
-import { supabase } from "@/lib/supabase";
+import { useLocation } from "@/lib/location-context";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -11,36 +11,36 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [gender, setGender] = useState("all");
   const [category, setCategory] = useState("all");
+  const { country, loading: locationLoading } = useLocation();
 
   useEffect(() => {
     async function fetchProducts() {
-      let query = supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+      // Wait for location to be detected
+      if (locationLoading) return;
+      
+      const res = await fetch(`/api/products?country=${country}`);
+      const data = await res.json();
+      
+      let filtered = (data.products || []).filter((p) => p.is_active);
 
       if (gender !== "all") {
-        query = query.or(`gender.eq.${gender},gender.eq.unisex`);
+        filtered = filtered.filter((p) => p.gender === gender || p.gender === "unisex");
       }
       if (category !== "all") {
-        query = query.eq("category_id", category);
+        filtered = filtered.filter((p) => p.category_id === category);
       }
 
-      const { data } = await query;
-      setProducts(data || []);
+      setProducts(filtered);
       setLoading(false);
     }
     fetchProducts();
-  }, [gender, category]);
+  }, [gender, category, country, locationLoading]);
 
   useEffect(() => {
     async function fetchCategories() {
-      const { data } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
-      setCategories(data || []);
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      setCategories(data.categories || []);
     }
     fetchCategories();
   }, []);

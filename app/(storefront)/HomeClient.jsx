@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import { supabase } from "@/lib/supabase";
+import { useLocation } from "@/lib/location-context";
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -15,23 +15,31 @@ export default function HomePage() {
   const [activeGender, setActiveGender] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeCollection, setActiveCollection] = useState(null);
+  const { country, loading: locationLoading } = useLocation();
 
   useEffect(() => {
     async function fetchAll() {
-      const [{ data: productsData }, collectionsRes, settingsRes] = await Promise.all([
-        supabase.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      if (locationLoading) return;
+      
+      const [productsRes, collectionsRes, settingsRes] = await Promise.all([
+        fetch(`/api/products?country=${country}`),
         fetch("/api/collections"),
         fetch("/api/settings"),
       ]);
-      setProducts(productsData || []);
+      
+      const productsData = await productsRes.json();
+      setProducts((productsData.products || []).filter(p => p.is_active));
+      
       const colData = await collectionsRes.json();
       setCollections(colData.collections || []);
+      
       const settData = await settingsRes.json();
       if (settData.settings?.hero_video_url) setHeroVideoUrl(settData.settings.hero_video_url);
+      
       setLoading(false);
     }
     fetchAll();
-  }, []);
+  }, [country, locationLoading]);
 
   const categories = useMemo(() => {
     const cats = new Set();

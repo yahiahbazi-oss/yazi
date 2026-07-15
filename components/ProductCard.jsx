@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useLocation } from "@/lib/location-context";
+import { formatPrice } from "@/lib/countries";
 
 function productHref(product) {
   const nameSlug = product.name
@@ -21,6 +23,32 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
   const [hoveredColor, setHoveredColor] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [isCardHovered, setIsCardHovered] = useState(false);
+  const { country, countryData } = useLocation();
+
+  // Get price for user's country
+  const getPriceForCountry = () => {
+    if (overridePrice !== null) return overridePrice;
+    
+    // Try to get price from multi-country pricing
+    if (product.prices && product.prices[country]) {
+      return product.prices[country].price;
+    }
+    
+    // Fallback to default price (usually TND)
+    return product.price || 0;
+  };
+
+  // Get currency symbol for display
+  const getCurrencySymbol = () => {
+    if (product.prices && product.prices[country]) {
+      const currency = product.prices[country].currency;
+      return countryData?.currency === currency ? countryData.symbol : currency;
+    }
+    return "TND";
+  };
+
+  const price = getPriceForCountry();
+  const currencySymbol = getCurrencySymbol();
 
   const cv = product.color_variants && typeof product.color_variants === "object" ? product.color_variants : null;
   const colors = cv ? Object.keys(cv) : [];
@@ -54,8 +82,8 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
   }
 
   const discountPct =
-    product.compare_price && product.compare_price > product.price
-      ? Math.round((1 - product.price / product.compare_price) * 100)
+    product.compare_price && product.compare_price > price
+      ? Math.round((1 - price / product.compare_price) * 100)
       : null;
 
   return (
@@ -130,9 +158,9 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
             {product.name}
           </h3>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-neutral-900 text-sm font-medium">{overridePrice ?? product.price} TND</p>
-            {!overridePrice && product.compare_price && product.compare_price > product.price && (
-              <p className="text-neutral-400 text-sm line-through">{product.compare_price} TND</p>
+            <p className="text-neutral-900 text-sm font-medium">{price} {currencySymbol}</p>
+            {!overridePrice && product.compare_price && product.compare_price > price && (
+              <p className="text-neutral-400 text-sm line-through">{product.compare_price} {currencySymbol}</p>
             )}
           </div>
         </div>

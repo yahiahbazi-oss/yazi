@@ -47,7 +47,7 @@ export default function ProductsPage() {
   const [recoSearch, setRecoSearch] = useState("");
 
   const fetchProducts = useCallback(async () => {
-    const res = await fetch("/api/products");
+    const res = await fetch("/api/products?country=ALL");
     const data = await res.json();
     setProducts(data.products || []);
     setLoading(false);
@@ -161,10 +161,23 @@ export default function ProductsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Product name is required");
-    if (!form.price || parseFloat(form.price) <= 0) return toast.error("Valid price is required");
     
     // Validate multi-country pricing
-    if (form.target_countries.length === 0) return toast.error("Select at least one country");
+    if (!form.target_countries || form.target_countries.length === 0) {
+      return toast.error("Select at least one country");
+    }
+    
+    // Validate that all selected countries have prices
+    for (const countryCode of form.target_countries) {
+      const priceData = form.prices[countryCode];
+      if (!priceData || !priceData.price || parseFloat(priceData.price) <= 0) {
+        return toast.error(`Please set a valid price for ${countryCode}`);
+      }
+    }
+    
+    // Use first country's price as the default 'price' field for backward compatibility
+    const firstCountry = form.target_countries[0];
+    const defaultPrice = form.prices[firstCountry]?.price || 0;
     
     setSaving(true);
     try {
@@ -175,11 +188,11 @@ export default function ProductsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           ...form, 
-          price: parseFloat(form.price), 
+          price: parseFloat(defaultPrice), // Use first country's price as default
           compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, 
           big_size_price: form.big_size_price !== '' && form.big_size_price !== null ? parseFloat(form.big_size_price) : null, 
           category_id: form.category_id || null, 
-          delivery_price: form.delivery_price !== null && form.delivery_price !== '' ? parseFloat(form.delivery_price) : null,
+          delivery_price: form.delivery_fees[firstCountry] || 8,
           target_countries: form.target_countries,
           prices: form.prices,
           delivery_fees: form.delivery_fees,
@@ -335,45 +348,11 @@ export default function ProductsPage() {
                 <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Description</label>
                 <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} resize-none`} rows={3} placeholder="Product description" />
               </div>
-                <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Price (TND) *</label>
-                  <input type="number" step="0.01" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="0.00" required />
-                </div>
-                <div>
-                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix barré (TND)</label>
-                  <input type="number" step="0.01" value={form.compare_price} onChange={(e) => setForm((p) => ({ ...p, compare_price: e.target.value }))} className={inputClass} placeholder="Ex: 120.00" />
-                  <p className="text-neutral-400 text-[10px] mt-1">Laissez vide si pas de remise</p>
-                </div>
-              </div>
-              <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix Grandes Tailles 3XL-5XL (TND)</label>
-                <input type="number" step="0.01" value={form.big_size_price} onChange={(e) => setForm((p) => ({ ...p, big_size_price: e.target.value }))} className={inputClass} placeholder="Laissez vide si même prix" />
-                <p className="text-neutral-400 text-[10px] mt-1">Si renseigné, ce prix s&apos;applique quand le client choisit 3XL, 4XL ou 5XL</p>
-              </div>
-              <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Category</label>
-                <select value={form.category_id} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))} className={inputClass}>
-                  <option value="">&#x2014; Select &#x2014;</option>
-                  {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Genre</label>
-                <div className="flex gap-3">
-                  {["men", "women", "unisex"].map((g) => (
-                    <button key={g} type="button" onClick={() => setForm((p) => ({ ...p, gender: g }))}
-                      className={`px-4 py-2 rounded-lg border text-sm capitalize transition-colors ${form.gender === g ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Multi-Country Pricing */}
+              
+              {/* Multi-Country Pricing - MOVED TO TOP */}
               <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4 space-y-4">
                 <div>
-                  <label className="text-blue-900 text-xs tracking-wider uppercase block mb-2 font-semibold">🌍 Target Countries & Pricing</label>
+                  <label className="text-blue-900 text-xs tracking-wider uppercase block mb-2 font-semibold">🌍 Target Countries & Pricing *</label>
                   <p className="text-blue-700 text-xs mb-3">Select countries where this product will be available. Set price and delivery fee per country.</p>
                   
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -392,7 +371,7 @@ export default function ProductsPage() {
                             if (!isSelected) {
                               const newPrices = { ...form.prices };
                               newPrices[country.code] = { 
-                                price: form.price || "", 
+                                price: "", 
                                 currency: country.currency 
                               };
                               const newFees = { ...form.delivery_fees };
@@ -491,6 +470,25 @@ export default function ProductsPage() {
                       })}
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Category</label>
+                <select value={form.category_id} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))} className={inputClass}>
+                  <option value="">&#x2014; Select &#x2014;</option>
+                  {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Genre</label>
+                <div className="flex gap-3">
+                  {["men", "women", "unisex"].map((g) => (
+                    <button key={g} type="button" onClick={() => setForm((p) => ({ ...p, gender: g }))}
+                      className={`px-4 py-2 rounded-lg border text-sm capitalize transition-colors ${form.gender === g ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
+                      {g}
+                    </button>
+                  ))}
                 </div>
               </div>
 

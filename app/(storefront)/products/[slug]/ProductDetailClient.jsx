@@ -7,6 +7,7 @@ import { Minus, Plus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/lib/cart-context";
+import { useLocation } from "@/lib/location-context";
 import { trackViewContent, trackAddToCart } from "@/lib/pixel-events";
 import ProductCard from "@/components/ProductCard";
 import { ProductJsonLd } from "@/components/JsonLd";
@@ -19,6 +20,7 @@ const isBigSize = (s) => BIG_SIZES.includes(s);
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const { addItem } = useCart();
+  const { country, countryData } = useLocation();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -30,6 +32,41 @@ export default function ProductDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(null);
   const formRef = useRef(null);
+  
+  // Get price for user's country
+  const getProductPrice = () => {
+    if (!product) return 0;
+    
+    // Try to get price from multi-country pricing
+    if (product.prices && product.prices[country]) {
+      return product.prices[country].price;
+    }
+    
+    // Fallback to default price (usually TND)
+    return product.price || 0;
+  };
+  
+  // Get delivery fee for user's country
+  const getDeliveryFee = () => {
+    if (!product) return 8;
+    
+    // Try to get delivery fee from multi-country settings
+    if (product.delivery_fees && product.delivery_fees[country]) {
+      return product.delivery_fees[country];
+    }
+    
+    // Fallback to product delivery_price or default 8
+    return product.delivery_price ?? 8;
+  };
+  
+  // Get currency symbol for display
+  const getCurrencySymbol = () => {
+    if (product && product.prices && product.prices[country]) {
+      const currency = product.prices[country].currency;
+      return countryData?.currency === currency ? countryData.symbol : currency;
+    }
+    return countryData?.symbol || "TND";
+  };
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const UUID_PREFIX_RE = /^[0-9a-f]{8}$/i;
@@ -87,9 +124,12 @@ export default function ProductDetailPage() {
     setSelectedImage(0);
   };
 
+  const basePrice = getProductPrice();
+  const currencySymbol = getCurrencySymbol();
+
   const displayPrice = selectedSize && isBigSize(selectedSize) && product?.big_size_price
     ? product.big_size_price
-    : product?.price;
+    : basePrice;
 
   const isValidPhone = (p) => {
     const d = p.replace(/[\s\-().]/g, "");
@@ -108,7 +148,7 @@ export default function ProductDetailPage() {
     }
 
     const colorInfo = selectedColor && product.color_variants?.[selectedColor];
-    const cartImage = images[0] || product.images?.[0] || null;
+    consbasePge = images[0] || product.images?.[0] || null;
     const effectivePrice = isBigSize(selectedSize) && product.big_size_price
       ? product.big_size_price
       : product.price;
@@ -132,13 +172,11 @@ export default function ProductDetailPage() {
     if (!orderForm.address.trim()) { toast.error("Veuillez entrer votre adresse"); return; }
     if (!orderForm.governorate) { toast.error("Veuillez choisir un gouvernorat"); return; }
 
-    const effectivePrice = isBigSize(selectedSize) && product.big_size_price ? product.big_size_price : product.price;
+    const effectivePrice = isBigSize(selectedSize) && product.big_size_price ? product.big_size_price : basePrice;
     const subtotal = effectivePrice * quantity;
     
-    // Calculate delivery fee: use product-specific delivery price if set, otherwise default 8 TND
-    const deliveryFee = product.delivery_price !== null && product.delivery_price !== undefined 
-      ? product.delivery_price 
-      : 8;
+    // Calculate delivery fee using multi-country settings
+    const deliveryFee = getDeliveryFee();
     
     const total = subtotal + deliveryFee;
     const colorInfo = selectedColor && product.color_variants?.[selectedColor];
@@ -302,9 +340,9 @@ export default function ProductDetailPage() {
                 Nouveau
               </span>
             )}
-            {!product.is_coming_soon && product.compare_price && product.compare_price > product.price && (
+            {!product.is_coming_soon && product.compare_price && product.compare_price > basePrice && (
               <span className="bg-red-500 text-white text-[10px] tracking-widest uppercase px-3 py-1">
-                Promo -{Math.round((1 - product.price / product.compare_price) * 100)}%
+                Promo -{Math.round((1 - basePrice / product.compare_price) * 100)}%
               </span>
             )}
           </div>
@@ -316,19 +354,19 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="flex items-baseline gap-3 mb-2">
             <p className="text-4xl font-bold text-neutral-900">
-              {displayPrice ?? product.price} <span className="text-2xl font-medium">TND</span>
+              {displayPrice} <span className="text-2xl font-medium">{currencySymbol}</span>
             </p>
             {!selectedSize || !isBigSize(selectedSize) ? (
-              product.compare_price && product.compare_price > product.price && (
+              product.compare_price && product.compare_price > basePrice && (
                 <p className="text-neutral-400 text-lg font-serif line-through">
-                  {product.compare_price} TND
+                  {product.compare_price} {currencySymbol}
                 </p>
               )
             ) : null}
           </div>
 
-          <p className={`text-xs mb-4 font-medium ${product.delivery_price ? "text-neutral-500" : "text-green-600"}`}>
-            {product.delivery_price ? null : "✅ Livraison gratuite"}
+          <p className={`text-xs mb-4 font-medium ${getDeliveryFee() === 0 ? "text-green-600" : "text-neutral-500"}`}>
+            {getDeliveryFee() === 0 ? "✅ Livraison gratuite" : null}
           </p>
 
           {/* FLASHY TOP CTA - placeholder removed, moved under form */}
