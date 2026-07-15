@@ -136,6 +136,7 @@ export default function OrdersPage() {
             <thead>
               <tr className="border-b border-neutral-200 text-neutral-400 text-xs tracking-widest uppercase">
                 <th className="text-left px-4 py-3">N° Commande</th>
+                <th className="text-left px-4 py-3">Produits</th>
                 <th className="text-left px-4 py-3">Client</th>
                 <th className="text-left px-4 py-3 hidden sm:table-cell">Téléphone</th>
                 <th className="text-left px-4 py-3 hidden md:table-cell">Gouvernorat</th>
@@ -148,13 +149,13 @@ export default function OrdersPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-neutral-400">
+                  <td colSpan={9} className="text-center py-12 text-neutral-400">
                     Chargement...
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-neutral-400">
+                  <td colSpan={9} className="text-center py-12 text-neutral-400">
                     Aucune commande trouvée
                   </td>
                 </tr>
@@ -166,6 +167,32 @@ export default function OrdersPage() {
                   >
                     <td className="px-4 py-3 text-neutral-900 font-mono text-xs font-medium">
                       {order.order_number}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {order.items?.[0]?.image && (
+                          <img
+                            src={order.items[0].image}
+                            alt={order.items[0].name}
+                            className="w-12 h-12 object-cover rounded border border-neutral-200"
+                          />
+                        )}
+                        <div className="flex flex-col">
+                          {order.items?.slice(0, 2).map((item, i) => (
+                            <div key={i} className="text-xs text-neutral-700">
+                              <span className="font-medium">{item.name}</span>
+                              <span className="text-neutral-400 ml-1">
+                                ({item.size} × {item.quantity})
+                              </span>
+                            </div>
+                          ))}
+                          {order.items?.length > 2 && (
+                            <span className="text-xs text-neutral-400">
+                              +{order.items.length - 2} autre{order.items.length - 2 > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-neutral-900">{order.customer_name}</td>
                     <td className="px-4 py-3 text-neutral-500 hidden sm:table-cell">{order.phone}</td>
@@ -271,11 +298,24 @@ export default function OrdersPage() {
               <div className="border-t border-neutral-200 pt-4">
                 <p className="text-neutral-400 text-xs tracking-widest uppercase mb-3">Articles</p>
                 {selectedOrder.items?.map((item, i) => (
-                  <div key={i} className="flex justify-between text-sm py-1">
-                    <span className="text-neutral-900">
-                      {item.name} — {item.size} × {item.quantity}
-                    </span>
-                    <span className="text-neutral-500">{item.price * item.quantity} TND</span>
+                  <div key={i} className="flex gap-3 py-2 border-b border-neutral-100 last:border-0">
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded border border-neutral-200"
+                      />
+                    )}
+                    <div className="flex-1 flex justify-between items-start">
+                      <div>
+                        <p className="text-neutral-900 text-sm font-medium">{item.name}</p>
+                        <p className="text-neutral-500 text-xs mt-0.5">
+                          Taille: {item.size} × {item.quantity}
+                          {item.colorName && ` — ${item.colorName}`}
+                        </p>
+                      </div>
+                      <span className="text-neutral-900 text-sm font-medium">{item.price * item.quantity} TND</span>
+                    </div>
                   </div>
                 ))}
                 <div className="flex justify-between text-sm pt-3 mt-3 border-t border-neutral-200">

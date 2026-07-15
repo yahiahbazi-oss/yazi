@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings, Video, Check } from "lucide-react";
+import { Settings, Video, Check, Truck } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function SettingsPage() {
   const [videoUrl, setVideoUrl] = useState("");
-  const [original, setOriginal] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState("8");
+  const [original, setOriginal] = useState({ videoUrl: "", deliveryFee: "8" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -15,8 +16,10 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings");
       const data = await res.json();
       const url = data.settings?.hero_video_url || "";
+      const fee = data.settings?.default_delivery_fee || "8";
       setVideoUrl(url);
-      setOriginal(url);
+      setDeliveryFee(fee);
+      setOriginal({ videoUrl: url, deliveryFee: fee });
       setLoading(false);
     }
     fetchSettings();
@@ -25,15 +28,19 @@ export default function SettingsPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!videoUrl.trim()) return toast.error("L'URL est requise");
+    if (!deliveryFee || parseFloat(deliveryFee) < 0) return toast.error("Frais de livraison invalides");
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hero_video_url: videoUrl.trim() }),
+        body: JSON.stringify({ 
+          hero_video_url: videoUrl.trim(),
+          default_delivery_fee: deliveryFee
+        }),
       });
       if (!res.ok) throw new Error();
-      setOriginal(videoUrl.trim());
+      setOriginal({ videoUrl: videoUrl.trim(), deliveryFee });
       toast.success("Paramètres enregistrés");
     } catch {
       toast.error("Échec de l'enregistrement");
@@ -42,7 +49,7 @@ export default function SettingsPage() {
     }
   };
 
-  const changed = videoUrl !== original;
+  const changed = videoUrl !== original.videoUrl || deliveryFee !== original.deliveryFee;
 
   return (
     <div>
@@ -74,6 +81,31 @@ export default function SettingsPage() {
                 onChange={(e) => setVideoUrl(e.target.value)}
                 className="w-full border border-neutral-200 rounded-lg text-neutral-900 text-sm px-3 py-2.5 focus:outline-none focus:border-neutral-400 transition-colors bg-white"
                 placeholder="https://res.cloudinary.com/.../video.webm"
+              />
+            )}
+          </div>
+
+          {/* Delivery Fee Setting */}
+          <div>
+            <h2 className="text-neutral-900 font-medium mb-1 flex items-center gap-2">
+              <Truck className="w-4 h-4" />
+              Frais de livraison par défaut
+            </h2>
+            <p className="text-neutral-400 text-xs mb-4">
+              Frais de livraison appliqués par défaut (en TND). Les produits avec livraison gratuite ou un prix spécifique ne seront pas affectés.
+            </p>
+
+            {loading ? (
+              <div className="h-10 bg-neutral-100 rounded-lg animate-pulse" />
+            ) : (
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={deliveryFee}
+                onChange={(e) => setDeliveryFee(e.target.value)}
+                className="w-full border border-neutral-200 rounded-lg text-neutral-900 text-sm px-3 py-2.5 focus:outline-none focus:border-neutral-400 transition-colors bg-white"
+                placeholder="8.00"
               />
             )}
           </div>

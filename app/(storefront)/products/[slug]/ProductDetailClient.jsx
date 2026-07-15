@@ -563,12 +563,18 @@ export default function ProductDetailPage() {
           {!product.is_coming_soon && (
             <a
               href={"https://wa.me/21693733766?text=" + encodeURIComponent(
-                "Bonjour, je voudrais commander :\n*" + product.name + "*" +
+                "Bonjour, je voudrais commander :\n\n" +
+                "*" + product.name + "*" +
                 (selectedSize ? "\nTaille : " + selectedSize : "") +
                 (selectedColor && product.color_variants?.[selectedColor] ? "\nCouleur : " + product.color_variants[selectedColor].name : "") +
                 "\nQuantité : " + quantity +
                 "\nPrix unitaire : " + (displayPrice ?? product.price) + " TND" +
-                "\nTotal : " + ((displayPrice ?? product.price) * quantity).toFixed(2) + " TND"
+                "\nTotal : " + ((displayPrice ?? product.price) * quantity).toFixed(2) + " TND" +
+                (images[0] ? "\n\n📷 Image : " + images[0] : "") +
+                (orderForm.name ? "\n\n👤 Nom : " + orderForm.name : "") +
+                (orderForm.phone ? "\n📞 Téléphone : " + orderForm.phone : "") +
+                (orderForm.address ? "\n📍 Adresse : " + orderForm.address + (orderForm.delegation ? ", " + orderForm.delegation : "") : "") +
+                (orderForm.governorate ? "\n🏛️ Gouvernorat : " + orderForm.governorate : "")
               )}
               target="_blank"
               rel="noopener noreferrer"

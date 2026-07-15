@@ -418,42 +418,109 @@ export default function ProductsPage() {
 
               {/* Stock */}
               <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock S → XXL</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {SIZES.map((size) => (
-                    <div key={size}>
-                      <p className="text-neutral-500 text-xs text-center mb-1">{size}</p>
-                      <input type="number" min="0" value={form.stock[size] || 0}
-                        onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
-                        className={`${inputClass} text-center`} />
-                    </div>
-                  ))}
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-2">Stock S → XXL</label>
+                <p className="text-neutral-400 text-[10px] mb-3">Cochez les tailles disponibles. Mettez à 0 pour retirer une taille.</p>
+                <div className="grid grid-cols-5 gap-3">
+                  {SIZES.map((size) => {
+                    const qty = form.stock[size] || 0;
+                    const isEnabled = qty > 0;
+                    return (
+                      <div key={size} className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={isEnabled}
+                            onChange={(e) => {
+                              const newQty = e.target.checked ? 1 : 0;
+                              setForm((p) => ({ ...p, stock: { ...p.stock, [size]: newQty } }));
+                            }}
+                            className="w-4 h-4 rounded border-neutral-300 accent-neutral-900" 
+                          />
+                          <span className="text-sm font-medium text-neutral-700">{size}</span>
+                        </label>
+                        {isEnabled && (
+                          <input 
+                            type="number" 
+                            min="0" 
+                            value={qty}
+                            onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
+                            className={`${inputClass} text-center text-sm`}
+                            placeholder="Qté"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock Grandes Tailles (3XL → 5XL)</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {BIG_SIZES.map((size) => (
-                    <div key={size}>
-                      <p className="text-neutral-500 text-xs text-center mb-1">{size}</p>
-                      <input type="number" min="0" value={form.stock[size] || 0}
-                        onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
-                        className={`${inputClass} text-center`} />
-                    </div>
-                  ))}
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-2">Stock Grandes Tailles (3XL → 5XL)</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {BIG_SIZES.map((size) => {
+                    const qty = form.stock[size] || 0;
+                    const isEnabled = qty > 0;
+                    return (
+                      <div key={size} className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={isEnabled}
+                            onChange={(e) => {
+                              const newQty = e.target.checked ? 1 : 0;
+                              setForm((p) => ({ ...p, stock: { ...p.stock, [size]: newQty } }));
+                            }}
+                            className="w-4 h-4 rounded border-neutral-300 accent-neutral-900" 
+                          />
+                          <span className="text-sm font-medium text-neutral-700">{size}</span>
+                        </label>
+                        {isEnabled && (
+                          <input 
+                            type="number" 
+                            min="0" 
+                            value={qty}
+                            onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
+                            className={`${inputClass} text-center text-sm`}
+                            placeholder="Qté"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Stock Tailles Européennes (36 → 48)</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {EU_SIZES.map((size) => (
-                    <div key={size}>
-                      <p className="text-neutral-500 text-xs text-center mb-1">{size}</p>
-                      <input type="number" min="0" value={form.stock[size] || 0}
-                        onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
-                        className={`${inputClass} text-center`} />
-                    </div>
-                  ))}
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-2">Stock Tailles Européennes (36 → 48)</label>
+                <div className="grid grid-cols-4 gap-3">
+                  {EU_SIZES.map((size) => {
+                    const qty = form.stock[size] || 0;
+                    const isEnabled = qty > 0;
+                    return (
+                      <div key={size} className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={isEnabled}
+                            onChange={(e) => {
+                              const newQty = e.target.checked ? 1 : 0;
+                              setForm((p) => ({ ...p, stock: { ...p.stock, [size]: newQty } }));
+                            }}
+                            className="w-4 h-4 rounded border-neutral-300 accent-neutral-900" 
+                          />
+                          <span className="text-sm font-medium text-neutral-700">{size}</span>
+                        </label>
+                        {isEnabled && (
+                          <input 
+                            type="number" 
+                            min="0" 
+                            value={qty}
+                            onChange={(e) => setForm((p) => ({ ...p, stock: { ...p.stock, [size]: parseInt(e.target.value) || 0 } }))}
+                            className={`${inputClass} text-center text-sm`}
+                            placeholder="Qté"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

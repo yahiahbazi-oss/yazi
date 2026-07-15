@@ -17,7 +17,7 @@ export async function PATCH(request) {
   try {
     const body = await request.json();
     const supabase = createServerClient();
-    const allowed = ["hero_video_url"];
+    const allowed = ["hero_video_url", "default_delivery_fee"];
     for (const key of allowed) {
       if (body[key] !== undefined) {
         await supabase
