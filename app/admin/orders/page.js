@@ -12,6 +12,9 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  Truck,
+  PackageCheck,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -48,6 +51,8 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [sendingToDelivery, setSendingToDelivery] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState({});
   const limit = 15;
 
   const fetchOrders = useCallback(async () => {
@@ -79,6 +84,63 @@ export default function OrdersPage() {
       }
     } catch {
       toast.error("Échec de la mise à jour");
+    }
+  };
+
+  const sendToNavexDelivery = async (order) => {
+    if (order.navex_tracking_code) {
+      toast.error("Commande déjà envoyée à la livraison");
+      return;
+    }
+
+    setSendingToDelivery(order.id);
+    try {
+      const res = await fetch("/api/navex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", orderId: order.id }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        toast.success(`Livraison créée! Code: ${data.trackingCode}`);
+        fetchOrders();
+        if (selectedOrder?.id === order.id) {
+          setSelectedOrder((prev) => ({
+            ...prev,
+            navex_tracking_code: data.trackingCode,
+            navex_sent_at: new Date().toISOString(),
+          }));
+        }
+      } else {
+        toast.error(data.error || "Échec de création de livraison");
+      }
+    } catch (err) {
+      toast.error("Erreur lors de l'envoi à Navex");
+    } finally {
+      setSendingToDelivery(null);
+    }
+  };
+
+  const trackDelivery = async (trackingCode) => {
+    try {
+      const res = await fetch("/api/navex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "track", trackingCode }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setTrackingStatus((prev) => ({ ...prev, [trackingCode]: data.tracking }));
+        toast.success("Statut mis à jour");
+      } else {
+        toast.error("Échec de suivi de livraison");
+      }
+    } catch (err) {
+      toast.error("Erreur lors du suivi");
     }
   };
 
@@ -390,6 +452,89 @@ export default function OrdersPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Navex Delivery Management */}
+              <div className="border-t border-neutral-200 pt-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Truck className="w-4 h-4 text-neutral-400" />
+                  <p className="text-neutral-400 text-xs tracking-widest uppercase">Livraison Navex</p>
+                </div>
+
+                {!selectedOrder.navex_tracking_code ? (
+                  <button
+                    onClick={() => sendToNavexDelivery(selectedOrder)}
+                    disabled={sendingToDelivery === selectedOrder.id}
+                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {sendingToDelivery === selectedOrder.id ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      <>
+                        <PackageCheck className="w-4 h-4" />
+                        Envoyer à Navex
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-600 font-medium mb-1">Code de suivi</p>
+                      <p className="text-lg font-mono font-bold text-blue-900">{selectedOrder.navex_tracking_code}</p>
+                      {selectedOrder.navex_sent_at && (
+                        <p className="text-xs text-blue-500 mt-1">
+                          Envoyé le {new Date(selectedOrder.navex_sent_at).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                    </div>
+
+                    {trackingStatus[selectedOrder.navex_tracking_code] && (
+                      <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-neutral-500">Statut actuel</p>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            trackingStatus[selectedOrder.navex_tracking_code].status === "Livrer Paye"
+                              ? "bg-green-100 text-green-700"
+                              : trackingStatus[selectedOrder.navex_tracking_code].status === "En cours"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {trackingStatus[selectedOrder.navex_tracking_code].status}
+                          </span>
+                        </div>
+                        {trackingStatus[selectedOrder.navex_tracking_code].driver && (
+                          <div className="text-xs text-neutral-600">
+                            <span className="font-medium">Livreur:</span> {trackingStatus[selectedOrder.navex_tracking_code].driver}
+                            {trackingStatus[selectedOrder.navex_tracking_code].driverPhone && (
+                              <span className="ml-2">📞 {trackingStatus[selectedOrder.navex_tracking_code].driverPhone}</span>
+                            )}
+                          </div>
+                        )}
+                        {trackingStatus[selectedOrder.navex_tracking_code].reason && (
+                          <p className="text-xs text-neutral-500">
+                            <span className="font-medium">Motif:</span> {trackingStatus[selectedOrder.navex_tracking_code].reason}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => trackDelivery(selectedOrder.navex_tracking_code)}
+                      className="w-full flex items-center justify-center gap-2 border border-blue-200 text-blue-600 hover:bg-blue-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Actualiser le statut
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
