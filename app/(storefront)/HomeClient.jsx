@@ -97,21 +97,21 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Underline-style filter tabs — horizontally scrollable */}
+        {/* Pill-style filter tabs — horizontally scrollable */}
         <div className="sticky top-16 sm:top-20 z-30 bg-white border-b border-neutral-100 overflow-x-auto hide-scrollbar">
-          <div className="flex min-w-max px-4 sm:px-6">
+          <div className="flex gap-2 min-w-max px-4 sm:px-6 py-3">
             {allTabs.map((tab) => {
               const active = isTabActive(tab);
               return (
                 <button
                   key={String(tab.key) + tab.group}
                   onClick={() => handleTab(tab)}
-                  className={`px-4 py-3 sm:py-3.5 text-[11px] tracking-[0.2em] uppercase whitespace-nowrap border-b-2 transition-all duration-150 ${
+                  className={`px-5 py-2 text-xs tracking-[0.15em] uppercase whitespace-nowrap rounded-full font-semibold transition-all duration-150 ${
                     active
-                      ? "border-neutral-900 text-neutral-900 font-semibold"
+                      ? "bg-neutral-900 text-white shadow-sm"
                       : tab.special === "sales"
-                      ? "border-transparent text-red-400 hover:text-red-600 hover:border-red-300"
-                      : "border-transparent text-neutral-400 hover:text-neutral-700 hover:border-neutral-300"
+                      ? "text-red-500 hover:bg-red-50 border border-red-200"
+                      : "text-neutral-600 hover:bg-neutral-100 border border-neutral-200"
                   }`}
                 >
                   {tab.label}

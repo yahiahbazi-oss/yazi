@@ -39,8 +39,8 @@ export async function POST(request) {
     const { 
       name, description, price, images, category, category_id, gender, 
       color_variants, stock, is_new, delivery_price, is_trending, is_coming_soon, 
-      compare_price, big_size_price, collection_slugs, recommended_product_ids,
-      target_countries, prices, delivery_fees 
+      compare_price, big_size_price, recommended_product_ids,
+      gif_url, show_gif_on_home
     } = body;
 
     if (!name?.trim()) {
@@ -70,11 +70,9 @@ export async function POST(request) {
         is_coming_soon: is_coming_soon || false,
         compare_price: compare_price !== undefined && compare_price !== null && compare_price !== '' ? compare_price : null,
         big_size_price: big_size_price !== undefined && big_size_price !== null && big_size_price !== '' ? big_size_price : null,
-        collection_slugs: Array.isArray(collection_slugs) ? collection_slugs : [],
         recommended_product_ids: Array.isArray(recommended_product_ids) ? recommended_product_ids : [],
-        target_countries: target_countries || ["TN"],
-        prices: prices || { TN: { price, currency: "TND" } },
-        delivery_fees: delivery_fees || { TN: 8 },
+        gif_url: gif_url?.trim() || null,
+        show_gif_on_home: show_gif_on_home || false,
         is_active: true,
       })
       .select()

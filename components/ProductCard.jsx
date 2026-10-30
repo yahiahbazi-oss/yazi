@@ -62,6 +62,11 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
     displayImage = getColorImages(defaultColor)[0] || null;
   }
 
+  // Use gif_url as display image if product has one set for homepage
+  if (product.gif_url && product.show_gif_on_home && !hoveredColor && !selectedColor) {
+    displayImage = product.gif_url;
+  }
+
   const discountPct =
     product.compare_price && product.compare_price > price
       ? Math.round((1 - price / product.compare_price) * 100)
@@ -125,13 +130,13 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
 
         {/* Product info — minimal, left-aligned */}
         <div className="px-3 pt-3 pb-4 bg-white">
-          <p className="text-neutral-900 text-[12px] sm:text-[13px] leading-snug mb-1 line-clamp-2">
+          <p className="text-neutral-900 text-[13px] md:text-sm lg:text-[15px] leading-snug mb-1 line-clamp-2 font-medium">
             {product.name}
           </p>
-          <div className="flex items-center gap-2">
-            <p className="text-neutral-700 text-[12px] sm:text-[13px]">{price} {currencySymbol}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-neutral-800 text-[13px] md:text-sm lg:text-[15px] font-semibold">{price} {currencySymbol}</p>
             {!overridePrice && product.compare_price && product.compare_price > price && (
-              <p className="text-neutral-400 text-[11px] line-through">{product.compare_price} {currencySymbol}</p>
+              <p className="text-neutral-400 text-[11px] md:text-xs line-through">{product.compare_price} {currencySymbol}</p>
             )}
           </div>
         </div>

@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
-import { COUNTRIES, getCurrencyByCode } from "@/lib/countries";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const BIG_SIZES = ["3XL", "4XL", "5XL"];
@@ -16,17 +15,17 @@ const emptyProduct = {
   compare_price: "",
   big_size_price: "",
   category_id: "",
-  gender: "unisex",
+  gender: "men",
   color_variants: {},
+  images: [],
+  gif_url: "",
+  show_gif_on_home: false,
   is_new: false,
   is_trending: false,
   is_coming_soon: false,
   delivery_price: null,
   recommended_product_ids: [],
   stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
-  target_countries: ["TN"],
-  prices: { TN: { price: "", currency: "TND" } },
-  delivery_fees: { TN: 8 },
 };
 
 export default function ProductsPage() {
@@ -42,6 +41,7 @@ export default function ProductsPage() {
   const [colorCode, setColorCode] = useState("#000000");
   const [colorImageUrl, setColorImageUrl] = useState("");
   const [editingColor, setEditingColor] = useState(null);
+  const [mainImageUrl, setMainImageUrl] = useState("");
   const [recoSearch, setRecoSearch] = useState("");
 
   const fetchProducts = useCallback(async () => {
@@ -75,11 +75,6 @@ export default function ProductsPage() {
   };
 
   const openEdit = (product) => {
-    // Prepare multi-country data
-    const targetCountries = product.target_countries || ["TN"];
-    const prices = product.prices || { TN: { price: product.price || "", currency: "TND" } };
-    const deliveryFees = product.delivery_fees || { TN: product.delivery_price || 8 };
-    
     setForm({
       name: product.name || "",
       description: product.description || "",
@@ -87,20 +82,21 @@ export default function ProductsPage() {
       compare_price: product.compare_price || "",
       big_size_price: product.big_size_price || "",
       category_id: product.category_id || "",
-      gender: product.gender || "unisex",
+      gender: product.gender === "women" ? "women" : "men",
       color_variants: product.color_variants || {},
+      images: product.images || [],
+      gif_url: product.gif_url || "",
+      show_gif_on_home: product.show_gif_on_home || false,
       is_new: product.is_new || false,
       is_trending: product.is_trending || false,
       is_coming_soon: product.is_coming_soon || false,
       delivery_price: product.delivery_price,
       recommended_product_ids: product.recommended_product_ids || [],
       stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
-      target_countries: targetCountries,
-      prices: prices,
-      delivery_fees: deliveryFees,
     });
     setEditingId(product.id);
     setEditingColor(null);
+    setMainImageUrl("");
     setShowForm(true);
   };
 
@@ -153,27 +149,21 @@ export default function ProductsPage() {
     });
   };
 
+  const addMainImage = () => {
+    if (!mainImageUrl.trim()) return;
+    setForm((p) => ({ ...p, images: [...(p.images || []), mainImageUrl.trim()] }));
+    setMainImageUrl("");
+  };
+
+  const removeMainImage = (i) => {
+    setForm((p) => ({ ...p, images: (p.images || []).filter((_, idx) => idx !== i) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return toast.error("Product name is required");
-    
-    // Validate multi-country pricing
-    if (!form.target_countries || form.target_countries.length === 0) {
-      return toast.error("Select at least one country");
-    }
-    
-    // Validate that all selected countries have prices
-    for (const countryCode of form.target_countries) {
-      const priceData = form.prices[countryCode];
-      if (!priceData || !priceData.price || parseFloat(priceData.price) <= 0) {
-        return toast.error(`Please set a valid price for ${countryCode}`);
-      }
-    }
-    
-    // Use first country's price as the default 'price' field for backward compatibility
-    const firstCountry = form.target_countries[0];
-    const defaultPrice = form.prices[firstCountry]?.price || 0;
-    
+    if (!form.name.trim()) return toast.error("Nom du produit requis");
+    if (!form.price || parseInt(form.price) <= 0) return toast.error("Prix valide requis");
+
     setSaving(true);
     try {
       const url = editingId ? `/api/products/${editingId}` : "/api/products";
@@ -181,20 +171,28 @@ export default function ProductsPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          ...form, 
-          price: parseFloat(defaultPrice), // Use first country's price as default
-          compare_price: form.compare_price !== '' && form.compare_price !== null ? parseFloat(form.compare_price) : null, 
-          big_size_price: form.big_size_price !== '' && form.big_size_price !== null ? parseFloat(form.big_size_price) : null, 
-          category_id: form.category_id || null, 
-          delivery_price: form.delivery_fees[firstCountry] || 8,
-          target_countries: form.target_countries,
-          prices: form.prices,
-          delivery_fees: form.delivery_fees,
+        body: JSON.stringify({
+          name: form.name.trim(),
+          description: form.description?.trim() || null,
+          price: parseInt(form.price),
+          compare_price: form.compare_price !== "" && form.compare_price !== null ? parseInt(form.compare_price) : null,
+          big_size_price: form.big_size_price !== "" && form.big_size_price !== null ? parseInt(form.big_size_price) : null,
+          category_id: form.category_id || null,
+          gender: form.gender,
+          color_variants: form.color_variants,
+          images: form.images || [],
+          gif_url: form.gif_url?.trim() || null,
+          show_gif_on_home: form.show_gif_on_home || false,
+          is_new: form.is_new,
+          is_trending: form.is_trending,
+          is_coming_soon: form.is_coming_soon,
+          delivery_price: form.delivery_price !== null && form.delivery_price !== "" ? parseInt(form.delivery_price) : null,
+          stock: form.stock,
+          recommended_product_ids: form.recommended_product_ids,
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success(editingId ? "Product updated" : "Product created");
+      toast.success(editingId ? "Produit modifié ✓" : "Produit créé ✓");
       setShowForm(false);
       fetchProducts();
     } catch {
@@ -344,147 +342,99 @@ export default function ProductsPage() {
                 <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} resize-none`} rows={3} placeholder="Product description" />
               </div>
               
-              {/* Multi-Country Pricing - MOVED TO TOP */}
-              <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4 space-y-4">
+              {/* Pricing — simple TND integers */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-blue-900 text-xs tracking-wider uppercase block mb-2 font-semibold">🌍 Target Countries & Pricing *</label>
-                  <p className="text-blue-700 text-xs mb-3">Select countries where this product will be available. Set price and delivery fee per country.</p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {COUNTRIES.map((country) => {
-                      const isSelected = form.target_countries.includes(country.code);
-                      return (
-                        <button
-                          key={country.code}
-                          type="button"
-                          onClick={() => {
-                            const newCountries = isSelected
-                              ? form.target_countries.filter((c) => c !== country.code)
-                              : [...form.target_countries, country.code];
-                            
-                            // Initialize pricing for new country
-                            if (!isSelected) {
-                              const newPrices = { ...form.prices };
-                              newPrices[country.code] = { 
-                                price: "", 
-                                currency: country.currency 
-                              };
-                              const newFees = { ...form.delivery_fees };
-                              newFees[country.code] = 8;
-                              setForm((p) => ({ 
-                                ...p, 
-                                target_countries: newCountries,
-                                prices: newPrices,
-                                delivery_fees: newFees,
-                              }));
-                            } else {
-                              // Remove pricing for deselected country
-                              const newPrices = { ...form.prices };
-                              delete newPrices[country.code];
-                              const newFees = { ...form.delivery_fees };
-                              delete newFees[country.code];
-                              setForm((p) => ({ 
-                                ...p, 
-                                target_countries: newCountries,
-                                prices: newPrices,
-                                delivery_fees: newFees,
-                              }));
-                            }
-                          }}
-                          className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                            isSelected
-                              ? "border-blue-600 bg-blue-600 text-white"
-                              : "border-neutral-300 text-neutral-600 hover:border-blue-400 bg-white"
-                          }`}
-                        >
-                          {country.flag} {country.code}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Pricing per selected country */}
-                  {form.target_countries.length > 0 && (
-                    <div className="space-y-3">
-                      <p className="text-blue-700 text-xs font-medium">Set prices for selected countries:</p>
-                      {form.target_countries.map((countryCode) => {
-                        const country = COUNTRIES.find((c) => c.code === countryCode);
-                        if (!country) return null;
-                        const currencyInfo = getCurrencyByCode(country.currency);
-                        const priceData = form.prices[countryCode] || { price: "", currency: country.currency };
-                        const deliveryFee = form.delivery_fees[countryCode] || 8;
-
-                        return (
-                          <div key={countryCode} className="bg-white border border-neutral-200 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-lg">{country.flag}</span>
-                              <span className="font-medium text-sm text-neutral-900">{country.name}</span>
-                              <span className="text-xs text-neutral-500">({currencyInfo?.symbol || country.currency})</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-neutral-500 text-xs block mb-1">Price *</label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={priceData.price}
-                                  onChange={(e) => {
-                                    const newPrices = { ...form.prices };
-                                    newPrices[countryCode] = {
-                                      ...newPrices[countryCode],
-                                      price: e.target.value,
-                                      currency: country.currency,
-                                    };
-                                    setForm((p) => ({ ...p, prices: newPrices }));
-                                  }}
-                                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neutral-400"
-                                  placeholder={`0.00 ${currencyInfo?.symbol || country.currency}`}
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="text-neutral-500 text-xs block mb-1">Delivery Fee</label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={deliveryFee}
-                                  onChange={(e) => {
-                                    const newFees = { ...form.delivery_fees };
-                                    newFees[countryCode] = parseFloat(e.target.value) || 0;
-                                    setForm((p) => ({ ...p, delivery_fees: newFees }));
-                                  }}
-                                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neutral-400"
-                                  placeholder={`0.00 ${currencyInfo?.symbol || country.currency}`}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix TND *</label>
+                  <input type="number" step="1" min="0" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="89" required />
+                </div>
+                <div>
+                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Prix Barré TND</label>
+                  <input type="number" step="1" min="0" value={form.compare_price} onChange={(e) => setForm((p) => ({ ...p, compare_price: e.target.value }))} className={inputClass} placeholder="120" />
+                </div>
+                <div>
+                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Grandes Tailles TND</label>
+                  <input type="number" step="1" min="0" value={form.big_size_price} onChange={(e) => setForm((p) => ({ ...p, big_size_price: e.target.value }))} className={inputClass} placeholder="99" />
                 </div>
               </div>
 
               <div>
-                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Category</label>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Catégorie <span className="text-neutral-400 normal-case tracking-normal">(optionnel)</span></label>
                 <select value={form.category_id} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))} className={inputClass}>
-                  <option value="">&#x2014; Select &#x2014;</option>
+                  <option value="">— Aucune catégorie —</option>
                   {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
                 </select>
               </div>
               <div>
                 <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Genre</label>
                 <div className="flex gap-3">
-                  {["men", "women", "unisex"].map((g) => (
-                    <button key={g} type="button" onClick={() => setForm((p) => ({ ...p, gender: g }))}
-                      className={`px-4 py-2 rounded-lg border text-sm capitalize transition-colors ${form.gender === g ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
-                      {g}
+                  {[{ value: "men", label: "Homme" }, { value: "women", label: "Femme" }].map(({ value, label }) => (
+                    <button key={value} type="button" onClick={() => setForm((p) => ({ ...p, gender: value }))}
+                      className={`px-5 py-2 rounded-lg border text-sm font-medium transition-colors ${form.gender === value ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
+                      {label}
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Images principales */}
+              <div>
+                <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Images du produit <span className="text-neutral-400 normal-case tracking-normal">(URLs — JPG, PNG, GIF autorisés)</span></label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="url"
+                    value={mainImageUrl}
+                    onChange={(e) => setMainImageUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addMainImage(); } }}
+                    className={inputClass}
+                    placeholder="https://... (image ou GIF)"
+                  />
+                  <button type="button" onClick={addMainImage} className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm hover:bg-neutral-800 transition-colors whitespace-nowrap">
+                    Ajouter
+                  </button>
+                </div>
+                {(form.images || []).length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(form.images || []).map((url, i) => (
+                      <div key={i} className="relative w-16 h-16 bg-neutral-100 rounded-lg overflow-hidden group border border-neutral-200">
+                        <img src={url} alt="" className="w-full h-full object-contain" />
+                        {url.toLowerCase().endsWith(".gif") && (
+                          <span className="absolute top-0.5 left-0.5 bg-violet-500 text-white text-[8px] px-1 rounded font-bold">GIF</span>
+                        )}
+                        <button type="button" onClick={() => removeMainImage(i)} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* GIF principal pour la page d'accueil */}
+              <div className="border border-violet-200 bg-violet-50/40 rounded-xl p-4 space-y-3">
+                <label className="text-violet-900 text-xs tracking-wider uppercase block font-semibold">🎬 GIF page d&apos;accueil</label>
+                <p className="text-violet-700 text-xs">Si vous ajoutez un lien GIF ici, il sera affiché et joué automatiquement sur la page d&apos;accueil à la place de l&apos;image principale.</p>
+                <input
+                  type="url"
+                  value={form.gif_url}
+                  onChange={(e) => setForm((p) => ({ ...p, gif_url: e.target.value }))}
+                  className={inputClass}
+                  placeholder="https://res.cloudinary.com/... (lien .gif)"
+                />
+                {form.gif_url && (
+                  <div className="flex items-center gap-3">
+                    <img src={form.gif_url} alt="GIF preview" className="w-16 h-16 object-contain rounded-lg border border-neutral-200 bg-neutral-100" />
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.show_gif_on_home}
+                        onChange={(e) => setForm((p) => ({ ...p, show_gif_on_home: e.target.checked }))}
+                        className="w-4 h-4 rounded accent-violet-600"
+                      />
+                      <span className="text-sm text-neutral-700 font-medium">Afficher ce GIF sur la page d&apos;accueil</span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Color Variants */}
@@ -546,16 +496,16 @@ export default function ProductsPage() {
                 <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-1.5">Livraison</label>
                 <div className="flex gap-3 mb-2">
                   <button type="button" onClick={() => setForm((p) => ({ ...p, delivery_price: null }))}
-                    className={`px-4 py-2 rounded-lg border text-sm transition-colors ${form.delivery_price === null || form.delivery_price === undefined ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
-                    Livraison gratuite
+                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${form.delivery_price === null || form.delivery_price === undefined ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
+                    Gratuite
                   </button>
-                  <button type="button" onClick={() => setForm((p) => ({ ...p, delivery_price: p.delivery_price || '' }))}
-                    className={`px-4 py-2 rounded-lg border text-sm transition-colors ${form.delivery_price !== null && form.delivery_price !== undefined ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
-                    Prix fixe
+                  <button type="button" onClick={() => setForm((p) => ({ ...p, delivery_price: p.delivery_price || "" }))}
+                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${form.delivery_price !== null && form.delivery_price !== undefined ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"}`}>
+                    Prix fixe (TND)
                   </button>
                 </div>
                 {form.delivery_price !== null && form.delivery_price !== undefined && (
-                  <input type="number" step="0.01" min="0" value={form.delivery_price} onChange={(e) => setForm((p) => ({ ...p, delivery_price: e.target.value }))} className={inputClass} placeholder="Frais de livraison (TND)" />
+                  <input type="number" step="1" min="0" value={form.delivery_price} onChange={(e) => setForm((p) => ({ ...p, delivery_price: e.target.value }))} className={inputClass} placeholder="Ex: 8" />
                 )}
               </div>
 
