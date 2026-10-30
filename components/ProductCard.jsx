@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { useLocation } from "@/lib/location-context";
-import { formatPrice } from "@/lib/countries";
 
 function productHref(product) {
   const nameSlug = product.name
@@ -25,20 +23,12 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
   const [isCardHovered, setIsCardHovered] = useState(false);
   const { country, countryData } = useLocation();
 
-  // Get price for user's country
   const getPriceForCountry = () => {
     if (overridePrice !== null) return overridePrice;
-    
-    // Try to get price from multi-country pricing
-    if (product.prices && product.prices[country]) {
-      return product.prices[country].price;
-    }
-    
-    // Fallback to default price (usually TND)
+    if (product.prices && product.prices[country]) return product.prices[country].price;
     return product.price || 0;
   };
 
-  // Get currency symbol for display
   const getCurrencySymbol = () => {
     if (product.prices && product.prices[country]) {
       const currency = product.prices[country].currency;
@@ -60,25 +50,16 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
     return [];
   };
 
-  // Image display logic:
-  // 1. Hovering a color circle → first image of that color (overrides selection)
-  // 2. A color is selected (clicked) → first image of selected color
-  // 3. Card hovered, no selection → second image of default color
-  // 4. Default → first image of default color
-  const activeColor = hoveredColor || selectedColor || defaultColor;
   let displayImage;
   if (hoveredColor) {
-    const imgs = getColorImages(hoveredColor);
-    displayImage = imgs[0] || null;
+    displayImage = getColorImages(hoveredColor)[0] || null;
   } else if (selectedColor) {
-    const imgs = getColorImages(selectedColor);
-    displayImage = imgs[0] || null;
+    displayImage = getColorImages(selectedColor)[0] || null;
   } else if (isCardHovered) {
     const imgs = getColorImages(defaultColor);
     displayImage = imgs[1] || imgs[0] || null;
   } else {
-    const imgs = getColorImages(defaultColor);
-    displayImage = imgs[0] || null;
+    displayImage = getColorImages(defaultColor)[0] || null;
   }
 
   const discountPct =
@@ -87,16 +68,11 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
       : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="group"
-    >
+    <div className="bg-white group">
       <Link href={productHref(product)} className="block">
+        {/* Full-bleed image — no rounded corners, covers full column */}
         <div
-          className="relative aspect-[3/4] overflow-hidden bg-neutral-100 rounded-sm"
+          className="relative aspect-[3/4] overflow-hidden bg-neutral-100"
           onMouseEnter={() => setIsCardHovered(true)}
           onMouseLeave={() => setIsCardHovered(false)}
         >
@@ -104,7 +80,7 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
             <img
               src={displayImage}
               alt={product.name}
-              className="absolute inset-0 w-full h-full object-contain transition-all duration-500"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-neutral-300 text-sm">
@@ -112,64 +88,59 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
             </div>
           )}
 
-          {/* Left badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {/* Badges — minimal, top-left, text only (like stillhere) */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1">
             {product.is_coming_soon && (
-              <span className="bg-neutral-700 text-white text-[10px] tracking-widest uppercase px-3 py-1 font-medium">
-                Bient&ocirc;t
+              <span className="text-white text-[10px] tracking-[0.2em] uppercase font-medium drop-shadow-sm">
+                Bientôt
               </span>
             )}
             {!product.is_coming_soon && product.is_new && (
-              <span className="bg-neutral-900 text-white text-[10px] tracking-widest uppercase px-3 py-1 font-medium">
+              <span className="text-white text-[10px] tracking-[0.2em] uppercase font-medium drop-shadow-sm">
                 Nouveau
               </span>
             )}
             {!product.is_coming_soon && product.is_trending && (
-              <span className="bg-amber-500 text-white text-[10px] tracking-widest uppercase px-3 py-1 font-medium">
-                Tendance 🔥
+              <span className="text-white text-[10px] tracking-[0.2em] uppercase font-medium drop-shadow-sm">
+                Tendance
               </span>
             )}
           </div>
 
-          {/* Discount badge — big & flashy top-right */}
+          {/* Discount badge — top right */}
           {discountPct && !product.is_coming_soon && (
-            <div className="absolute top-2 right-2">
-              <span className="relative flex items-center justify-center">
-                <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-50" />
-                <span className="relative bg-red-500 text-white font-black text-base px-3 py-1 rounded-full shadow-lg leading-none">
-                  -{discountPct}%
-                </span>
-              </span>
-            </div>
+            <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 leading-none">
+              -{discountPct}%
+            </span>
           )}
 
-          {/* Coming soon overlay */}
           {product.is_coming_soon && (
-            <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-6">
-              <span className="text-white text-xs tracking-widest uppercase">
-                Bient&ocirc;t disponible
+            <div className="absolute inset-0 bg-black/30 flex items-end justify-center pb-4">
+              <span className="text-white text-[10px] tracking-widest uppercase">
+                Bientôt disponible
               </span>
             </div>
           )}
         </div>
 
-        <div className="mt-3 space-y-1">
-          <h3 className="text-neutral-900 text-sm tracking-wide group-hover:text-neutral-500 transition-colors">
+        {/* Product info — minimal, left-aligned */}
+        <div className="px-3 pt-3 pb-4 bg-white">
+          <p className="text-neutral-900 text-[12px] sm:text-[13px] leading-snug mb-1 line-clamp-2">
             {product.name}
-          </h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-neutral-900 text-sm font-medium">{price} {currencySymbol}</p>
+          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-neutral-700 text-[12px] sm:text-[13px]">{price} {currencySymbol}</p>
             {!overridePrice && product.compare_price && product.compare_price > price && (
-              <p className="text-neutral-400 text-sm line-through">{product.compare_price} {currencySymbol}</p>
+              <p className="text-neutral-400 text-[11px] line-through">{product.compare_price} {currencySymbol}</p>
             )}
           </div>
         </div>
       </Link>
 
-      {/* Color circles — outside Link so clicking doesn't navigate */}
+      {/* Color swatches below info — outside Link */}
       {colors.length > 0 && (
-        <div className="flex gap-2 pt-2 flex-wrap">
-          {colors.slice(0, 6).map((hex) => (
+        <div className="flex gap-1.5 px-3 pb-4 flex-wrap">
+          {colors.slice(0, 8).map((hex) => (
             <button
               key={hex}
               onMouseEnter={() => setHoveredColor(hex)}
@@ -178,20 +149,20 @@ export default function ProductCard({ product, index = 0, overridePrice = null }
                 e.preventDefault();
                 setSelectedColor((prev) => (prev === hex ? null : hex));
               }}
-              title={hex}
-              className={`w-5 h-5 rounded-full border-2 transition-all duration-200 hover:scale-125 ${
+              title={cv?.[hex]?.name || hex}
+              className={`w-4 h-4 rounded-full transition-all duration-150 ${
                 (hoveredColor === hex || (!hoveredColor && selectedColor === hex))
-                  ? "border-neutral-900 scale-125 shadow-md"
-                  : "border-neutral-200 hover:border-neutral-400"
+                  ? "scale-125 ring-1 ring-offset-1 ring-neutral-700"
+                  : "ring-1 ring-neutral-200 hover:scale-110"
               }`}
               style={{ backgroundColor: hex }}
             />
           ))}
-          {colors.length > 6 && (
-            <span className="text-[10px] text-neutral-400 self-center">+{colors.length - 6}</span>
+          {colors.length > 8 && (
+            <span className="text-[10px] text-neutral-400 self-center">+{colors.length - 8}</span>
           )}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

@@ -22,7 +22,6 @@ const emptyProduct = {
   is_trending: false,
   is_coming_soon: false,
   delivery_price: null,
-  collection_slugs: [],
   recommended_product_ids: [],
   stock: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
   target_countries: ["TN"],
@@ -33,7 +32,6 @@ const emptyProduct = {
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -60,9 +58,7 @@ export default function ProductsPage() {
   }, []);
 
   const fetchCollections = useCallback(async () => {
-    const res = await fetch("/api/collections");
-    const data = await res.json();
-    setCollections(data.collections || []);
+    // Collections removed
   }, []);
 
   useEffect(() => {
@@ -97,7 +93,6 @@ export default function ProductsPage() {
       is_trending: product.is_trending || false,
       is_coming_soon: product.is_coming_soon || false,
       delivery_price: product.delivery_price,
-      collection_slugs: product.collection_slugs || [],
       recommended_product_ids: product.recommended_product_ids || [],
       stock: product.stock || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0, "4XL": 0, "5XL": 0, "36": 0, "38": 0, "40": 0, "42": 0, "44": 0, "46": 0, "48": 0 },
       target_countries: targetCountries,
@@ -641,29 +636,6 @@ export default function ProductsPage() {
                   })}
                 </div>
               </div>
-
-              {collections.length > 0 && (
-                <div>
-                  <label className="text-neutral-500 text-xs tracking-wider uppercase block mb-2">Collections</label>
-                  <div className="flex flex-wrap gap-2">
-                    {collections.map((col) => {
-                      const checked = (form.collection_slugs || []).includes(col.slug);
-                      return (
-                        <label key={col.slug} className={`flex items-center gap-2 cursor-pointer rounded-lg border px-3 py-2 transition-colors ${checked ? "border-neutral-700 bg-neutral-50" : "border-neutral-200 hover:border-neutral-400"}`}>
-                          <input type="checkbox" checked={checked}
-                            onChange={(e) => {
-                              const slugs = form.collection_slugs || [];
-                              setForm((p) => ({ ...p, collection_slugs: e.target.checked ? [...slugs, col.slug] : slugs.filter((s) => s !== col.slug) }));
-                            }}
-                            className="w-4 h-4 accent-neutral-900" />
-                          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: col.color }} />
-                          <span className="text-sm text-neutral-700">{col.emoji} {col.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* Recommended Products Picker */}
               <div>

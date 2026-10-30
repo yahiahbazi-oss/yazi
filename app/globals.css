@@ -2,6 +2,21 @@
 
 @import "tailwindcss";
 
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #111111;
@@ -47,4 +62,23 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Marquee ticker */
+.animate-marquee {
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Shimmer sweep */
+.shimmer-sweep {
+  animation: shimmer-slide 0.7s ease-out;
+}
+
+/* Urgency dot */
+.urgency-dot {
+  animation: dot-pulse 1.6s ease-in-out infinite;
 }

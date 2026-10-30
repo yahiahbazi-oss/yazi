@@ -18,10 +18,11 @@ export const metadata = {
     "YAZI.TN — Mangez italien, conduisez allemand, habillez-vous tunisien ! Boutique de vêtements en ligne en Tunisie. Robes, hijab, pulls, vestes en daim, jeans, vêtements personnalisés pour femme et homme. Livraison partout en Tunisie. Paiement à la livraison. كُلْ إيطالي، اقُدْ ألماني، البسْ تونسي — متجر ملابس تونس.",
   icons: {
     icon: [
-      { url: "/favicon.png", sizes: "any" },
-      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.png", type: "image/png", sizes: "any" },
+      { url: "/icon.png",    type: "image/png", sizes: "512x512" },
     ],
-    apple: "/icon.png",
+    shortcut: "/favicon.png",
+    apple: [{ url: "/icon.png", sizes: "512x512", type: "image/png" }],
   },
   keywords: [
     // French
@@ -98,18 +99,18 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: `${SITE_URL}/images/og-cover.jpg`,
-        width: 1200,
-        height: 630,
-        alt: "YAZI.TN — Boutique vêtements en ligne Tunisie",
+        url: `${SITE_URL}/icon.png`,
+        width: 1024,
+        height: 1024,
+        alt: "YAZI — Boutique vêtements en ligne Tunisie",
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "YAZI.TN — Habillez-vous tunisien !",
     description: "Mangez italien, conduisez allemand, habillez-vous tunisien ! Mode femme & homme + vêtements personnalisés. Livraison partout en Tunisie.",
-    images: [`${SITE_URL}/images/og-cover.jpg`],
+    images: [`${SITE_URL}/icon.png`],
   },
   verification: {
     google: "f3sWgm9AVxJs8n9l3JOOTQ8CjDK_t88XJVioGHsGaMw",
